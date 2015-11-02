@@ -1,5 +1,7 @@
 node_modules
 /bootstrap/compiled.php
+public/src/lib
 .env.*.php
 .env.php
 .env
+.idea
