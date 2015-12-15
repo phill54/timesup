@@ -22,6 +22,7 @@ define('main', [
         timerInterval,
         startBtn = $('button[action="startTimer"]'),
         newGameBtn = $('a[action="newGame"]'),
+        scorePrevTermBtn = $('a[action="scorePrevTerm"]'),
         // cancelCardBtn = $('button[action="cancelCard"]'),
         nextCardBtn = $('button[action="nextCard"]'),
         scores = {
@@ -217,10 +218,7 @@ define('main', [
         return termStack;
     }
 
-    newGame();
-    startBtn.on('click', startTurn);
-    nextCardBtn.on('click', nextCard);
-    newGameBtn.on('click', function () {
+    function onNewGame() {
         var scoreA = $('td.score.total.team-a').html(),
             scoreB = $('td.score.total.team-b').html();
         if (scoreA >= scoreB) {
@@ -234,6 +232,17 @@ define('main', [
         startBtn.removeAttr('disabled');
         nextCardBtn.attr('disabled', 1);
         round = 1;
+        $('button.navbar-toggle').trigger('click');
         return false;
-    });
+    }
+
+    function onScorePrevTerm() {
+
+    }
+
+    newGame();
+    startBtn.on('click', startTurn);
+    nextCardBtn.on('click', nextCard);
+    newGameBtn.on('click', onNewGame);
+    scorePrevTermBtn.on('click', onScorePrevTerm);
 });

@@ -63,6 +63,7 @@ $build = isset($_GET['debug']) ? false : true;
 		<div id="navbar" class="collapse navbar-collapse">
 			<ul class="nav navbar-nav">
 				<li><a action="newGame">neues Spiel</a></li>
+				<li><a action="scorePrevTerm">letzten Begriff werten</a></li>
 <!--				<li><a href="#about">About</a></li>-->
 <!--				<li><a href="#contact">Contact</a></li>-->
 			</ul>
@@ -80,14 +81,6 @@ $build = isset($_GET['debug']) ? false : true;
 		</h3>
 		<h1 class="term">STARTE SPIEL</h1>
 		<p class="timer">&nbsp;</p>
-		<p>
-			<button type="button" class="btn btn-lg btn-primary" action="startTimer">Start</button>
-			<button type="button" class="btn btn-lg btn-success" action="nextCard" disabled>Richtig</button>
-		</p>
-		<!--		<p>
-                    <button type="button" class="btn btn-lg btn-danger" action="cancelCard" disabled>Begriff entfernen</button>
-                    <button type="button" class="btn btn-lg btn-default" action="startTimer">neues Spiel</button>
-		</p>-->
 	</div>
 
 	<div class="col-md-6">
@@ -125,6 +118,15 @@ $build = isset($_GET['debug']) ? false : true;
 	</div>
 
 </div><!-- /.container -->
+
+<nav class="navbar navbar-inverse navbar-fixed-bottom">
+	<div class="container">
+		<div class="navbar-header">
+			<button type="button" class="btn btn-lg btn-primary" action="startTimer">Start</button>
+			<button type="button" class="btn btn-lg btn-success" action="nextCard" disabled>Richtig</button>
+		</div>
+	</div>
+</nav>
 
 </body>
 </html>
