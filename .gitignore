@@ -1,7 +1,10 @@
-node_modules
-/bootstrap/compiled.php
-public/src/lib
-.env.*.php
-.env.php
-.env
+/node_modules
+/public/js-src/lib
 .idea
+/vendor
+/public/js
+/public/js-src/deps
+.DS_Store
+Thumbs.db
+npm-debug.log
+temp

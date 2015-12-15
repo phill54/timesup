@@ -1,0 +1,17 @@
+{
+  "name": "Time's Up",
+  "version": "0.1.0",
+  "dependencies": {
+    "requirejs": "requirejs#master",
+    "requirejs-text": "https://github.com/requirejs/text.git#master",
+    "requirejs-css": "require-css#master",
+    "less": "less#master",
+    "jquery": "jquery#2.1.2",
+    "bootstrap": "https://github.com/twbs/bootstrap.git#3.3.1",
+    "almond": "almond#master",
+    "json2-bower": "1.0.1",
+    "promise-js": "promise-js#0.0.5",
+    "howler": "https://github.com/goldfire/howler.js.git#v2.0.0-beta5"
+  },
+  "homepage": "ssl.godmode-trader.de"
+}

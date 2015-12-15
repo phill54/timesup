@@ -1,0 +1,10 @@
+CACHE MANIFEST
+# v.2
+
+Cache:
+js/app.js
+data/buzzer.mp3
+css/main.css
+
+Network:
+*
