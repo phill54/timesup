@@ -63,10 +63,10 @@ $build = isset($_GET['debug']) ? false : true;
 		</div>
 		<div id="navbar" class="collapse navbar-collapse">
 			<ul class="nav navbar-nav">
-				<li><a action="newGame">neues Spiel</a></li>
-				<li><a action="scorePrevTerm">letzten Begriff werten</a></li>
-				<li><a action="setTermsPersons">Personen</a></li>
-				<li><a action="setTermsMovies">Filme</a></li>
+<!--				<li><a action="newGame">neues Spiel</a></li>-->
+<!--				<li><a action="scorePrevTerm">letzten Begriff werten</a></li>-->
+				<li><a action="setTermsPersons">neues Spiel (Personen)</a></li>
+				<li><a action="setTermsMovies">neues Spiel (Filme)</a></li>
 <!--				<li><a href="#about">About</a></li>-->
 <!--				<li><a href="#contact">Contact</a></li>-->
 			</ul>

@@ -242,9 +242,11 @@ define('main', [
         return false;
     }
 
-    function onScorePrevTerm() {
-        return false;
-    }
+    //function onScorePrevTerm() {
+    //    refreshScoreBoard();
+    //    refreshInfo();
+    //    return false;
+    //}
 
     function setTermsMovies() {
         terms = movies;
@@ -261,8 +263,8 @@ define('main', [
     newGame();
     startBtn.on('click', startTurn);
     nextCardBtn.on('click', nextCard);
-    newGameBtn.on('click', onNewGame);
-    scorePrevTermBtn.on('click', onScorePrevTerm);
+    //newGameBtn.on('click', onNewGame);
+    //scorePrevTermBtn.on('click', onScorePrevTerm);
     setTermsMoviesBtn.on('click', setTermsMovies);
     setTermsPersonsBtn.on('click', setTermsPersons);
 });
