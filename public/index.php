@@ -10,7 +10,7 @@ $path = explode('/', $url[0]);
 $build = isset($_GET['debug']) ? false : true;
 //manifest="cache.manifest"
 ?>
-<html lang="de" >
+<html lang="de" manifest="cache.manifest">
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -18,6 +18,7 @@ $build = isset($_GET['debug']) ? false : true;
 	<!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
 	<meta name="description" content="">
 	<meta name="author" content="">
+	<meta name="apple-mobile-web-app-capable" content="yes">
 <!--	<link rel="icon" href="../../favicon.ico">-->
 
 	<title>Time's up</title>
