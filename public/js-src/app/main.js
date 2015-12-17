@@ -4,16 +4,18 @@ define('main', [
     'jquery'
     ,'bootstrap'
     ,'json'
-    ,'text!data/terms.json'
+    ,'text!data/terms/movies.json'
+    ,'text!data/terms/persons.json'
     ,'buzzer'
     ,'howler'
     // ,'text!tpl/contents.html'
-], function ($, bootstrap, json, terms, buzzerData, howler) {
+], function ($, bootstrap, json, movies, persons, buzzerData, howler) {
 
     var game = $('div.game'),
         round = 1,
         team = 'a',
         currentTerm,
+        terms,
         currentTermCount = 0,
         timerCountdown,
         timerTtl = 30,
@@ -23,6 +25,8 @@ define('main', [
         startBtn = $('button[action="startTimer"]'),
         newGameBtn = $('a[action="newGame"]'),
         scorePrevTermBtn = $('a[action="scorePrevTerm"]'),
+        setTermsPersonsBtn = $('a[action="setTermsPersons"]'),
+        setTermsMoviesBtn = $('a[action="setTermsMovies"]'),
         // cancelCardBtn = $('button[action="cancelCard"]'),
         nextCardBtn = $('button[action="nextCard"]'),
         scores = {
@@ -49,7 +53,9 @@ define('main', [
         //buzzerSource = document.createElement('source'),
         roundStack;
 
-    terms = json.parse(terms);
+    movies = json.parse(movies);
+    persons = json.parse(persons);
+    terms = movies;
     //buzzerSource.type = 'audio/mpeg';
     //buzzerSource.src = 'data:audio/mp3;base64,' + buzzerData;
     //buzzerSource.src = 'data/buzzer.mp3';
@@ -237,12 +243,26 @@ define('main', [
     }
 
     function onScorePrevTerm() {
-
+        return false;
     }
+
+    function setTermsMovies() {
+        terms = movies;
+        onNewGame();
+        return false;
+    }
+    function setTermsPersons() {
+        terms = persons;
+        onNewGame();
+        return false;
+    }
+
 
     newGame();
     startBtn.on('click', startTurn);
     nextCardBtn.on('click', nextCard);
     newGameBtn.on('click', onNewGame);
     scorePrevTermBtn.on('click', onScorePrevTerm);
+    setTermsMoviesBtn.on('click', setTermsMovies);
+    setTermsPersonsBtn.on('click', setTermsPersons);
 });
