@@ -8311,7 +8311,7 @@ p.timer {
   font-size: 6em;
 }
 
-div.game {
+div.container.game {
   padding-bottom: 50px;
 }
 
@@ -8319,4 +8319,13 @@ nav.navbar.navbar-fixed-bottom div.navbar-header {
   height: 70px;
   padding-top: 4px;
   text-align: center;
+}
+
+.navbar-header.terms {
+  display: none;
+}
+
+.container.terms {
+  display: none;
+  padding-bottom: 50px;
 }

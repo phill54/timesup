@@ -1,0 +1,9 @@
+var gutil = require('gulp-util'),
+	ftp = {
+		"host": "yourwebsite",
+		"user": "username",
+		"password": "password",
+		"parallel": 4,
+		"log": gutil.log
+	};
+module.exports = ftp;

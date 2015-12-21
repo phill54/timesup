@@ -1,9 +1,14 @@
 CACHE MANIFEST
-# v.3
 
 CACHE:
-/timesup/js/app.js
-/timesup/css/main.css
+js/app.js
+css/main.css
+data/audio/buzzer.mp3
 
 NETWORK:
 *
+
+SETTINGS:
+prefer-online
+
+# hash: bd2054aa379ef3243c272905f60719033489368593fbc46e79cb026f037ba5d7

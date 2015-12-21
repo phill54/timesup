@@ -4,10 +4,13 @@ var gulp = require('gulp-help')(require('gulp')),
     extend = require('extend'),
     rjs = require('gulp-requirejs'),
     less = require('gulp-less'),
+    manifest = require('gulp-manifest'),
+	ftpconfig = require('./gulp/ftp'),
     // cssjoin = require('gulp-cssjoin'),
     // cssimport = require('gulp-cssimport'),
     importcss = require('gulp-import-css'),
     gutil = require('gulp-util'),
+	ftp = require('vinyl-ftp'),
     uglify = require('gulp-uglify'),
     config = {
         publicPath: 'public/',
@@ -81,6 +84,21 @@ gulp.task('rmbuild', 'remove previous build folder', function () {
     deleteFolderRecursive(config.destPath);
 });
 
+gulp.task('manifest', 'refresh manifest file', function () {
+	return gulp.src([
+		'public/js/app.js',
+		'public/css/main.css',
+		'public/data/audio/*'
+	],{
+		base: 'public/'
+	}).pipe(manifest({
+		hash: true,
+		preferOnline: true,
+		network: ['*'],
+		filename: 'cache.manifest',
+		exclude: 'cache.manifest'
+	})).pipe(gulp.dest('public'));
+});
 
 gulp.task('buildcss', 'builds css for master layout', [
     'rmbuild'
@@ -102,10 +120,31 @@ gulp.task('buildmaster', 'builds js for master layout', [
         include: includes,
         out: 'app.js'
     }))
-        .pipe(uglify()).on('error', gutil.log)
-        .pipe(gulp.dest(config.destPath));
+		.pipe(uglify()).on('error', gutil.log)
+		.pipe(gulp.dest(config.destPath));
 
 });
+
+gulp.task('deploy', function () {
+	var conn = ftp.create(ftpconfig);
+
+	var globs = [
+		'js/app.js'
+		,'css/main.css'
+		,'data/audio/*'
+		,'cache.manifest'
+		,'index.php'
+	];
+
+	return gulp.src(globs, {
+		cwd: 'public',
+		base: 'public',
+		buffer: false
+	})
+	.pipe(conn.newer('/'))
+	.pipe(conn.dest('/'));
+});
+
 //
 //gulp.task('importcss', 'import css for master layout', ['buildcss'], function() {
 //    // default usage

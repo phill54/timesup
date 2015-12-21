@@ -1,14 +1,9 @@
 <?php
 $url = explode('?', $_SERVER['REQUEST_URI']);
 $path = explode('/', $url[0]);
-//if (count($path) > 1) {
-//    header("HTTP/1.0 404 Not Found");
-//   echo $url[0] . " file not found";
-//    die();
-//}
 
 $build = isset($_GET['debug']) ? false : true;
-//manifest="cache.manifest"
+
 ?>
 <html lang="de" manifest="cache.manifest">
 <head>
@@ -19,27 +14,17 @@ $build = isset($_GET['debug']) ? false : true;
 	<meta name="description" content="">
 	<meta name="author" content="">
 	<meta name="apple-mobile-web-app-capable" content="yes">
-<!--	<link rel="icon" href="../../favicon.ico">-->
 
 	<title>Time's up</title>
 
 
 	<?php if ($build) { ?>
-			<?php
-//				echo "<style>";
-//				echo file_get_contents('css/main.css');
-//				echo "</style>";
-//				echo "<script>";
-//				echo file_get_contents('js/app.js');
-//				echo "</script>";
- 			?>
 		<link href="css/main.css" rel="stylesheet">
 		<script src="js/app.js"></script>
 		<script>
 			require(['main'], function () {});
 		</script>
 	<?php } else { ?>
-<!--		<link href="css/main.css" rel="stylesheet">-->
 		<link rel="stylesheet/less" type="text/css" href="css/main.less" />
 		<script src="js-src/deps/less/dist/less.js" type="text/javascript"></script>
 		<script src="js-src/deps/requirejs/require.js" data-main="main"></script>
@@ -67,6 +52,7 @@ $build = isset($_GET['debug']) ? false : true;
 <!--				<li><a action="scorePrevTerm">letzten Begriff werten</a></li>-->
 				<li><a action="setTermsPersons">neues Spiel (Personen)</a></li>
 				<li><a action="setTermsMovies">neues Spiel (Filme)</a></li>
+				<li><a action="fixScore">Spielstand korrigieren</a></li>
 <!--				<li><a href="#about">About</a></li>-->
 <!--				<li><a href="#contact">Contact</a></li>-->
 			</ul>
@@ -86,7 +72,7 @@ $build = isset($_GET['debug']) ? false : true;
 		<p class="timer">&nbsp;</p>
 	</div>
 
-	<div class="col-md-6">
+	<div class="col-md-6 scores">
 		<table class="table table-striped">
 			<thead>
 				<tr>
@@ -121,12 +107,19 @@ $build = isset($_GET['debug']) ? false : true;
 	</div>
 
 </div><!-- /.container -->
+<div class="container terms">
+	Die letzten Begriffe korrigieren
+</div>
 
 <nav class="navbar navbar-inverse navbar-fixed-bottom">
 	<div class="container">
-		<div class="navbar-header">
+		<div class="navbar-header game">
 			<button type="button" class="btn btn-lg btn-primary" action="startTimer">Start</button>
 			<button type="button" class="btn btn-lg btn-success" action="nextCard" disabled>Richtig</button>
+<!--			<button type="button" class="btn btn-lg btn-warning" action="correct" disabled>Korrigieren</button>-->
+		</div>
+		<div class="navbar-header terms">
+			<button type="button" class="btn btn-lg btn-primary" action="backToGame">Zurück</button>
 		</div>
 	</div>
 </nav>

@@ -6,10 +6,9 @@ define('main', [
     ,'json'
     ,'text!data/terms/movies.json'
     ,'text!data/terms/persons.json'
-    ,'buzzer'
     ,'howler'
     // ,'text!tpl/contents.html'
-], function ($, bootstrap, json, movies, persons, buzzerData, howler) {
+], function ($, bootstrap, json, movies, persons, howler) {
 
     var game = $('div.game'),
         round = 1,
@@ -23,45 +22,36 @@ define('main', [
         timerContainer = $('p.timer'),
         timerInterval,
         startBtn = $('button[action="startTimer"]'),
-        newGameBtn = $('a[action="newGame"]'),
+        //newGameBtn = $('a[action="newGame"]'),
         scorePrevTermBtn = $('a[action="scorePrevTerm"]'),
         setTermsPersonsBtn = $('a[action="setTermsPersons"]'),
         setTermsMoviesBtn = $('a[action="setTermsMovies"]'),
         // cancelCardBtn = $('button[action="cancelCard"]'),
         nextCardBtn = $('button[action="nextCard"]'),
-        scores = {
-            'round-1': {
-                'team-a': 0,
-                'team-b': 0
-            },
-            'round-2': {
-                'team-a': 0,
-                'team-b': 0
-            },
-            'round-3': {
-                'team-a': 0,
-                'team-b': 0
-            }
-        },
+		scores = {
+			'round-1': {
+				'team-a': 0,
+				'team-b': 0
+			},
+			'round-2': {
+				'team-a': 0,
+				'team-b': 0
+			},
+			'round-3': {
+				'team-a': 0,
+				'team-b': 0
+			}
+		},
         termStack,
         buzzer = new howler.Howl({
-            //urls: ['data:audio/mp3;base64,' + buzzerData]
-            src: ['data:audio/mp3;base64,' + buzzerData]
-            //src: ['data/buzzer.mp3']
+            // src: ['data:audio/mp3;base64,' + buzzerData]
+            src: ['data/audio/buzzer.mp3']
         }),
-        //buzzer = new Audio('data:audio/mp3;base64,' + buzzerData),
-        //buzzerSource = document.createElement('source'),
         roundStack;
 
     movies = json.parse(movies);
     persons = json.parse(persons);
     terms = movies;
-    //buzzerSource.type = 'audio/mpeg';
-    //buzzerSource.src = 'data:audio/mp3;base64,' + buzzerData;
-    //buzzerSource.src = 'data/buzzer.mp3';
-    //buzzer.appendChild(buzzerSource);
-    //buzzer.preload = null;
-    //buzzer.load();
 
     function startTurn() {
         startTimer();
@@ -250,13 +240,11 @@ define('main', [
 
     function setTermsMovies() {
         terms = movies;
-        onNewGame();
-        return false;
+        return onNewGame();
     }
     function setTermsPersons() {
         terms = persons;
-        onNewGame();
-        return false;
+        return onNewGame();
     }
 
 

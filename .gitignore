@@ -1,10 +1,9 @@
 /node_modules
-/public/js-src/lib
 .idea
 /vendor
-/public/js
 /public/js-src/deps
 .DS_Store
 Thumbs.db
 npm-debug.log
 temp
+gulp/ftp.js
