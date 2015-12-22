@@ -12,7 +12,8 @@ require.config({
 		tpl: '../tpl/',
 		data:'../../data/',
 		howler: '../deps/howler/howler.min',
-		bongo: '../deps/bongo/dist/bongo.min'
+		bongo: '../deps/bongo/dist/bongo.min',
+		nosleep: '../deps/nosleep/NoSleep.min'
 	},
 	shim: {
 		"jquery": {
@@ -20,6 +21,9 @@ require.config({
 		},
 		"css": {
 			"deps": ['text']
+		},
+		"nosleep": {
+			"exports": "NoSleep"
 		},
 		"bootstrap": {
 			"deps": [
@@ -29,7 +33,7 @@ require.config({
 			],
 			"exports": "$.fn.popover"
 		},
-		json: {
+		"json": {
 			exports: 'JSON'
 		}
 	},

@@ -3685,6 +3685,16 @@ define("json", (function (global) {
     };
 }(this)));
 
+// NoSleep.min.js v0.5.0 - git.io/vfn01 - Rich Tibbett - MIT license
+!function(A){function e(A,e,o){var t=document.createElement("source");t.src=o,t.type="video/"+e,A.appendChild(t)}var o={Android:/Android/gi.test(navigator.userAgent),iOS:/AppleWebKit/.test(navigator.userAgent)&&/Mobile\/\w+/.test(navigator.userAgent)},t={WebM:"data:video/webm;base64,GkXfo0AgQoaBAUL3gQFC8oEEQvOBCEKCQAR3ZWJtQoeBAkKFgQIYU4BnQI0VSalmQCgq17FAAw9CQE2AQAZ3aGFtbXlXQUAGd2hhbW15RIlACECPQAAAAAAAFlSua0AxrkAu14EBY8WBAZyBACK1nEADdW5khkAFVl9WUDglhohAA1ZQOIOBAeBABrCBCLqBCB9DtnVAIueBAKNAHIEAAIAwAQCdASoIAAgAAUAmJaQAA3AA/vz0AAA=",MP4:"data:video/mp4;base64,AAAAHGZ0eXBpc29tAAACAGlzb21pc28ybXA0MQAAAAhmcmVlAAAAG21kYXQAAAGzABAHAAABthADAowdbb9/AAAC6W1vb3YAAABsbXZoZAAAAAB8JbCAfCWwgAAAA+gAAAAAAAEAAAEAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAIVdHJhawAAAFx0a2hkAAAAD3wlsIB8JbCAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAIAAAACAAAAAABsW1kaWEAAAAgbWRoZAAAAAB8JbCAfCWwgAAAA+gAAAAAVcQAAAAAAC1oZGxyAAAAAAAAAAB2aWRlAAAAAAAAAAAAAAAAVmlkZW9IYW5kbGVyAAAAAVxtaW5mAAAAFHZtaGQAAAABAAAAAAAAAAAAAAAkZGluZgAAABxkcmVmAAAAAAAAAAEAAAAMdXJsIAAAAAEAAAEcc3RibAAAALhzdHNkAAAAAAAAAAEAAACobXA0dgAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAIAAgASAAAAEgAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABj//wAAAFJlc2RzAAAAAANEAAEABDwgEQAAAAADDUAAAAAABS0AAAGwAQAAAbWJEwAAAQAAAAEgAMSNiB9FAEQBFGMAAAGyTGF2YzUyLjg3LjQGAQIAAAAYc3R0cwAAAAAAAAABAAAAAQAAAAAAAAAcc3RzYwAAAAAAAAABAAAAAQAAAAEAAAABAAAAFHN0c3oAAAAAAAAAEwAAAAEAAAAUc3RjbwAAAAAAAAABAAAALAAAAGB1ZHRhAAAAWG1ldGEAAAAAAAAAIWhkbHIAAAAAAAAAAG1kaXJhcHBsAAAAAAAAAAAAAAAAK2lsc3QAAAAjqXRvbwAAABtkYXRhAAAAAQAAAABMYXZmNTIuNzguMw=="},i=function(){return o.iOS?this.noSleepTimer=null:o.Android&&(this.noSleepVideo=document.createElement("video"),this.noSleepVideo.setAttribute("loop",""),e(this.noSleepVideo,"webm",t.WebM),e(this.noSleepVideo,"mp4",t.MP4)),this};i.prototype.enable=function(A){o.iOS?(this.disable(),this.noSleepTimer=window.setInterval(function(){window.location.href='/',window.setTimeout(window.stop,0)},A||15e3)):o.Android&&this.noSleepVideo.play()},i.prototype.disable=function(){o.iOS?this.noSleepTimer&&(window.clearInterval(this.noSleepTimer),this.noSleepTimer=null):o.Android&&this.noSleepVideo.pause()},A.NoSleep=i}(this);
+
+define("nosleep", (function (global) {
+    return function () {
+        var ret, fn;
+        return ret || global.NoSleep;
+    };
+}(this)));
+
 define('text!data/terms/movies.json',[],function () { return '{\n  "terms": [\n    "Die glorreichen Sieben",\n    "Matrix",\n    "Spiderman",\n    "Was sie schon immer über Sex wissen wollten und nie zu fragen gewagt haben...",\n    "Free Willy",\n    "Kevin - allein zu Haus",\n    "Ein Hund namens Beethoven",\n    "Snatch - Schweine und Diamanten",\n    "Aristocats",\n    "König der Löwen",\n    "Speed",\n    "...denn Sie wissen nicht, was Sie tun",\n    "Giganten",\n    "Inglorious Basterds",\n    "Pulp Fiction",\n    "Kill Bill",\n    "Reservoir Dogs",\n    "Django Unchained",\n    "Harry Potter",\n    "James Bond - Skyfall",\n    "James Bond - Spectre",\n    "James Bond - Man lebt nur zweimal",\n    "James Bond - Liebesgrüße aus Moskau",\n    "James Bond - Diamantenfieber",\n    "James Bond - Goldfinger",\n    "James Bond - Goldeneye",\n    "James Bond - Der Spion, der mich liebte",\n    "James Bond jagt Dr. No ",\n    "James Bond - Feuerball",\n    "James Bond - Im Geheimdienst ihrer Majestät",\n    "James Bond - Casino Royal",\n    "Iron Man",\n    "Thor",\n    "The Avengers",\n    "Der unglaubliche Hulk",\n    "Ziemlich beste Freunde",\n    "Bube, Dame, König, grAs",\n    "Sherlock Holmes",\n    "Superman",\n    "The Dark Knight",\n    "12 Monkeys",\n    "Ein Fisch namens Wanda",\n    "Das Leben des Brian",\n    "Erdbeben",\n    "Die nackte Kanone",\n    "The Fast and the Furious",\n    "Avatar - Aufbruch nach Pandora",\n    "Titanic",\n    "Jurassic Park",\n    "E.T. - Der Ausserirdische",\n    "Der Hobbit",\n    "Der Herr der Ringe",\n    "Transformers",\n    "Fluch der Karibik",\n    "Findet Nemo",\n    "Die Monster AG",\n    "Shrek - der tollkühne Held",\n    "Independence Day",\n    "Krieg der Sterne",\n    "Die Tribute von Panem",\n    "Das Sakrileg",\n    "Gravity",\n    "Mission: Impossible",\n    "Twilight",\n    "Planet der Affen",\n    "Forrest Gump",\n    "The Sixth Sense",\n    "Men In Black",\n    "Vom Winde verweht",\n    "Der weiße Hai",\n    "Ben Hur",\n    "2001 - Odyssee im Weltraum",\n    "Der Pate",\n    "Der Exorzist",\n    "Rocky",\n    "Rambo",\n    "Zurück in die Zukunft",\n    "Rain Man",\n    "Indiana Jones und der letzte Kreuzzug",\n    "Terminator",\n    "Stirb Langsam",\n    "Die unendliche Geschichte",\n    "Lethal Weapon",\n    "V wie Vendetta",\n    "Ratatouille",\n    "Pretty Woman",\n    "Schlaflos in Seattle",\n    "E-Mail für Dich",\n    "Der bewegte Mann",\n    "Der Schuh des Manitu",\n    "Good Bye, Lenin!",\n    "Crocodile Dundee",\n    "Der Name der Rose",\n    "Love Story",\n    "Platoon",\n    "Full Metal Jacket",\n    "Good Morning Vietnam",\n    "Der Soldat James Ryan",\n    "Schindler\'s Liste",\n    "Das Leben ist schön",\n    "Das dreckige Dutzend",\n    "Spartacus",\n    "Lawrence von Arabien",\n    "Das Dschungelbuch",\n    "Armageddon",\n    "The Wolf of Wall Street",\n    "50 Shades of Grey",\n    "The King\'s Speech",\n    "The Hangover",\n    "World War Z",\n    "Wolverine",\n    "Les Miserables",\n    "Life of Pi",\n    "Alien",\n    "Black Swan",\n    "Iron Sky - Wir kommen in Frieden",\n    "Die drei Musketiere",\n    "Robin Hood - König der Diebe",\n    "Der mit dem Wolf tanzt",\n    "The Social Network",\n    "American Pie",\n    "American Beauty",\n    "Fight Club",\n    "Slumdog Millionaire",\n    "Wall-E - der letzte räumt die Erde auf",\n    "Ocean\'s Eleven",\n    "Der Teufel trägt Prada",\n    "Brokeback Mountain",\n    "King Kong",\n    "Königreich der Himmel",\n    "Der Untergang",\n    "Schtonk!",\n    "Catch me if you can",\n    "3 Engel für Charlie",\n    "Sex and the City",\n    "Miss Undercover",\n    "Tomb Raider",\n    "Gladiator",\n    "Erin Brokovich",\n    "X-Men",\n    "Die Mumie",\n    "Notting Hill",\n    "Godzilla",\n    "Lola rennt",\n    "Spiel mir das Lied vom Tod",\n    "Singin\' in the Rain",\n    "Tanz der Vampire",\n    "Thomas Crown ist nicht zu fassen",\n    "Magnolia",\n    "Wie ein wilder Stier",\n    "Der unsichtbare Dritte",\n    "Gangs of New York",\n    "Bonnie und Clyde",\n    "Einer flog über das Kuckucksnest",\n    "Die Katze auf dem heißen Blechdach",\n    "Underworld",\n    "Fahrenheit 451",\n    "Brazil",\n    "Tiger & Dragon",\n    "Lost Highway",\n    "Der letzte Tango in Paris",\n    "Jackie Brown",\n    "Lost in Translation",\n    "Der große Diktator",\n    "M. Eine Stadt sucht einen Mörder",\n    "Manhattan",\n    "L.A. Confidential",\n    "Arsen und Spitzenhäubchen",\n    "The Good, the Bad and the Ugly (Zwei glorreiche Halunken)",\n    "Fargo",\n    "Doktor Schiwago",\n    "Gefährliche Brandung",\n    "Wall Street",\n    "Shutter Island",\n    "The Beach",\n    "Aviator",\n    "Heat",\n    "Taxi Driver",\n    "Goodfellas",\n    "Es war einmal in Amerika",\n    "Mary Shelleys Frankenstein",\n    "Casino",\n    "Verrückt nach Mary",\n    "Zoolander",\n    "Reine Nervensache",\n    "Easy Rider",\n    "Shining",\n    "Wenn der Postmann zweimal klingelt",\n    "Mars Attacks!",\n    "Besser geht\'s nicht",\n    "Departed - Unter Feinden",\n    "Das Kartell",\n    "Die Stunde der Patrioten",\n    "Jagd auf Roter Oktober",\n    "Walt Disney\'s Fantasia",\n    "Schneewittchen",\n    "Alice im Wunderland",\n    "Der Zauberer von Oz",\n    "Das Leben der Anderen",\n    "Zweiohrküken",\n    "Die Fälscher",\n    "Die Welle",\n    "Keinohrhasen",\n    "Das Parfum",\n    "Knocking on Heaven\'s Door"\n  ]\n}';});
 
 define('text!data/terms/persons.json',[],function () { return '{\n  "terms": [\n    "Aristoteles",\n    "Archimedes",\n    "Kopernikus",\n    "Galileo Galilei",\n    "Johannes Kepler",\n    "Blaise Pascal",\n    "Isaac Newton",\n    "Daniel Bernoulli",\n    "Max Planck",\n    "Marie Curie",\n    "Ernest Rutherford",\n    "Albert Einstein",\n    "Werner Heisenberg",\n    "Stephen Hawking",\n    "Mohammed",\n    "Karl der Große",\n    "Dschingis Khan",\n    "Marco Polo",\n    "Leonardo da Vinci",\n    "Johannes Gutenberg",\n    "Ludwig XIV.",\n    "William Shakespeare",\n    "Johann Sebastian Bach",\n    "Georg Friedrich Händel",\n    "Immanuel Kant",\n    "Benjamin Franklin",\n    "Voltaire",\n    "George Washington",\n    "Friedrich Schiller",\n    "Napoleon Bonaparte",\n    "Ludwig van Beethoven",\n    "Abraham Lincoln",\n    "Thomas Jefferson",\n    "Charles Darwin",\n    "Queen Victoria",\n    "Mark Twain",\n    "Jules Verne",\n    "Louis Pasteur",\n    "Leo Tolstoi",\n    "Friedrich Nietzsche",\n    "Peter Tschaikowski",\n    "Wilhelm Conrad Röntgen",\n    "Sigmund Freud",\n    "Vincent van Gogh",\n    "Thomas Alva Edison",\n    "Mahatma Gandhi",\n    "Lenin",\n    "Pablo Picasso",\n    "Winston Churchill",\n    "Charlie Chaplin",\n    "Ernest Hemingway",\n    "Louis Armstrong",\n    "Walt Disney",\n    "Astrid Lindgren",\n    "Mutter Teresa",\n    "Willy Brandt",\n    "Frank Sinatra",\n    "John F. Kennedy",\n    "Nelson Mandela",\n    "Sophie Scholl",\n    "Marilyn Monroe",\n    "Che Guevara",\n    "Martin Luther King",\n    "Anne Frank",\n    "Neil Armstrong",\n    "Elvis Presley",\n    "John Lennon",\n    "Bob Marley",\n    "Michael Jackson",\n    "Julian Assange",\n    "David Cameron",\n    "Barack Obama",\n    "George W. Bush",\n    "Ronald Reagon",\n    "Jimmy Carter",\n    "Richard Nixon",\n    "Francois Hollande",\n    "Angela Merkel",\n    "Vladimir Putin",\n    "Joschka Fischer",\n    "Kofi Annan",\n    "Wolfgang Schäuble",\n    "Helmut Kohl",\n    "Fidel Castro",\n    "Queen Elisabeth II.",\n    "Helmut Schmidt",\n    "Konrad Adenauer",\n    "Otto von Bismarck",\n    "Sir Francis Drake",\n    "Hernan Cortes",\n    "Richard I. Löwenherz",\n    "Friedrich I. Barbarossa",\n    "Mario Götze",\n    "Thomas Müller",\n    "Sebastian Vettel",\n    "Manuel Neuer",\n    "Lionel Messi",\n    "Christiano Ronaldo",\n    "Bastian Schweinsteiger",\n    "Roger Federer",\n    "Dirk Nowitzki",\n    "Vladimir Klitschko",\n    "Tiger Woods",\n    "David Beckham",\n    "Steffi Graf",\n    "Boris Becker",\n    "Jürgen Klopp",\n    "Michael Schumacher",\n    "Katarina Witt",\n    "Henry Maske",\n    "Michael Jordan",\n    "Jogi Löw",\n    "Diego Maradona",\n    "Uli Hoeneß",\n    "Niki Lauda",\n    "Ottmar Hitzfeld",\n    "Berti Vogts",\n    "Gerd Müller",\n    "Franz Beckenbauer",\n    "Reinhold Messner",\n    "Muhammad Ali",\n    "Pélé",\n    "Uwe Seeler",\n    "Megan Fox",\n    "Liam Hemsworth",\n    "Emma Watson",\n    "Jennifer Lawrence",\n    "Scarlett Johannsson",\n    "Nora Tschirner",\n    "Matthias Schweighöfer",\n    "Daniel Brühl",\n    "Angelina Jolie",\n    "Leonardo DiCaprio",\n    "Will Smith",\n    "Daniel Craig",\n    "Julia Roberts",\n    "Anke Engelke",\n    "Brad Pitt",\n    "Til Schweiger",\n    "Tom Cruise",\n    "George Clooney",\n    "Tom Hanks",\n    "Johnny Depp",\n    "Bruce Willis",\n    "Jackie Chan",\n    "Otto Waalkes",\n    "Arnold Schwarzenegger",\n    "Steven Spielberg",\n    "Sylvester Stallone",\n    "Robert De Niro",\n    "Harrison Ford",\n    "Al Pacino",\n    "Terence Hill",\n    "Götz George",\n    "Jack Nicholson",\n    "Woody Allen",\n    "Brigitte Bardot",\n    "Sean Connery",\n    "Clint Eastwood",\n    "Bud Spencer",\n    "Jerry Lewis",\n    "Angela Landsbury",\n    "Doris Day",\n    "Kirk Douglas",\n    "Katy Perry",\n    "Helene Fischer",\n    "Andreas Bourani",\n    "David Garrett",\n    "Shakira",\n    "Robbie Williams",\n    "Eminem",\n    "Xavier Naidoo",\n    "Jennifer Lopez",\n    "Celine Dion",\n    "Campino",\n    "Bono",\n    "Nena",\n    "Madonna",\n    "Prince",\n    "Herbert Grönemeyer",\n    "Dieter Bohlen",\n    "Peter Maffay",\n    "Elton John",\n    "David Bowie",\n    "Mireille Mathieu",\n    "Udo Lindenberg",\n    "Rod Stewart",\n    "Mick Jagger",\n    "Paul McCartney",\n    "Bob Dylan",\n    "Ringo Starr",\n    "Tina Turner",\n    "Freddy Mercury",\n    "Giuseppe Verdi",\n    "Raffael",\n    "Albrecht Dürer",\n    "Sandro Botticelli",\n    "Tizian",\n    "Peter Paul Rubens",\n    "Jan Vermeer",\n    "Francisco de Goya",\n    "Madame Tussaud",\n    "Caspar David Friedrich",\n    "William Turner",\n    "Claude Monet",\n    "Edvard Munch",\n    "Wassily Kandinsky",\n    "Paul Klee",\n    "Coco Chanel",\n    "Joseph Beuys",\n    "Andy Warhol",\n    "Karl Lagerfeld",\n    "Giorgio Armani",\n    "Ralph Lauren",\n    "Calvin Klein",\n    "Wolfgang Joop",\n    "Tommy Hilfiger",\n    "Donatella Versace",\n    "Joanne K. Rowling",\n    "Dan Brown",\n    "Frank Schätzing",\n    "Michael Houellebecq",\n    "Ken Follett",\n    "Stephen King",\n    "Leonard Cohen",\n    "Umberto Eco",\n    "Günter Grass",\n    "Antoine de Saint-Exupéry",\n    "Erich Kästner",\n    "Bertholt Brecht",\n    "Franz Kafka",\n    "Thomas Mann",\n    "Theodor Fontane",\n    "Friedrich Schiller",\n    "Johann Wolfgang von Goethe",\n    "Gotthold Ephraim Lessing",\n    "Joko Winterscheidt",\n    "Judith Rakers",\n    "Carolin Kebekus",\n    "Kim Kardashian",\n    "Oliver Pocher",\n    "Barbara Schöneberger",\n    "Markus Lanz",\n    "Olaf Schubert",\n    "Stefan Raab",\n    "Sandra Maischberger",\n    "Anne Will",\n    "Johannes B. Kerner",\n    "Ranga Yogeshwar",\n    "Hella von Sinnen",\n    "Harald Schmidt",\n    "Harald Schmidt",\n    "Günther Jauch",\n    "Oprah Winfrey",\n    "Ilja Richter",\n    "Thomas Gottschalk",\n    "Hugo Egon Balder",\n    "Alice Schwarzer",\n    "Frank Elstner",\n    "Peter Lustig",\n    "Hugh Hefner",\n    "Rupert Murdoch",\n    "Alfred Biolek",\n    "Arthur Schopenhauer",\n    "Christoph Kolumbus",\n    "Ferdinand Magellan",\n    "Leonhard Euler",\n    "Anders Celsius",\n    "James Cook",\n    "Gottlieb Daimler",\n    "Nikola Tesla",\n    "Henry Ford",\n    "Lance Armstrong",\n    "Wernher von Braun",\n    "Konrad Zuse",\n    "Tim Berners-Lee",\n    "Steve Jobs",\n    "Steve Wozniak",\n    "Bill Gates",\n    "Robert Koch",\n    "Albert Schweitzer",\n    "Beate Uhse",\n    "John D. Rockefeller",\n    "Levi Strauss",\n    "Arthur Guinness",\n    "Dietmar Hopp",\n    "Michael Bloomberg",\n    "Josef Ackermann",\n    "Paul Allen",\n    "Elon Musk",\n    "Larry Page",\n    "Sergey Brin",\n    "Mark Shuttleworth",\n    "Johannes Paul II.",\n    "Al Capone",\n    "Kaspar Hauser",\n    "Billy the Kid",\n    "Buffalo Bill",\n    "Loki Schmidt",\n    "Oskar Schindler",\n    "Diana Spencer (Prinzessin Diana)",\n    "Adolf Hitler",\n    "Dwight D. Eisenhower",\n    "Charles de Gaule",\n    "Michail Gorbatschow",\n    "Jassir Arafat",\n    "Mark Zuckerberg",\n    "Bradley Cooper",\n    "Hugh Jackman",\n    "Matt Damon",\n    "Ben Affleck",\n    "Richard Gere",\n    "Harrison Ford",\n    "Patrick Swayze",\n    "Penélope Cruz",\n    "Scarlett Johansson",\n    "Mila Kunis",\n    "Rihanna",\n    "Kate Beckinsale",\n    "Halle Berry",\n    "Jessica Biel",\n\t"Josef Stalin"\n  ]\n}\n';});
@@ -3696,34 +3706,35 @@ define('text!data/terms/persons.json',[],function () { return '{\n  "terms": [\n
 
 
 define('main', [
-    'jquery'
+	'jquery'
 	,'bongo'
-    ,'bootstrap'
-    ,'json'
-    ,'text!data/terms/movies.json'
-    ,'text!data/terms/persons.json'
-    ,'howler'
-    // ,'text!tpl/contents.html'
-], function ($, bongo, bootstrap, json, movies, persons, howler) {
-
-    var game = $('div.game'),
-        round = 1,
-        team = 'a',
-        currentTerm,
-        terms,
-        currentTermCount = 0,
-        timerCountdown,
-        timerTtl = 30,
-        termCount = 40,
-        timerContainer = $('p.timer'),
-        timerInterval,
-        startBtn = $('button[action="startTimer"]'),
-        //newGameBtn = $('a[action="newGame"]'),
-        scorePrevTermBtn = $('a[action="scorePrevTerm"]'),
-        setTermsPersonsBtn = $('a[action="setTermsPersons"]'),
-        setTermsMoviesBtn = $('a[action="setTermsMovies"]'),
-        // cancelCardBtn = $('button[action="cancelCard"]'),
-        nextCardBtn = $('button[action="nextCard"]'),
+	,'bootstrap'
+	,'json'
+	,'nosleep'
+	,'text!data/terms/movies.json'
+	,'text!data/terms/persons.json'
+	,'howler'
+	// ,'text!tpl/contents.html'
+], function ($, bongo, bootstrap, json, NoSleep, movies, persons, howler) {
+	var game = $('div.game'),
+		round = 1,
+		team = 'a',
+		currentTerm,
+		terms,
+		caffein = new NoSleep(),
+		currentTermCount = 0,
+		timerCountdown,
+		timerTtl = 30,
+		termCount = 40,
+		timerContainer = $('p.timer'),
+		timerInterval,
+		startBtn = $('button[action="startTimer"]'),
+		//newGameBtn = $('a[action="newGame"]'),
+		scorePrevTermBtn = $('a[action="scorePrevTerm"]'),
+		setTermsPersonsBtn = $('a[action="setTermsPersons"]'),
+		setTermsMoviesBtn = $('a[action="setTermsMovies"]'),
+		// cancelCardBtn = $('button[action="cancelCard"]'),
+		nextCardBtn = $('button[action="nextCard"]'),
 		scores = {
 			'round-1': {
 				'team-a': 0,
@@ -3738,219 +3749,226 @@ define('main', [
 				'team-b': 0
 			}
 		},
-        termStack,
-        buzzer = new howler.Howl({
-            // src: ['data:audio/mp3;base64,' + buzzerData]
-            src: ['data/audio/buzzer.mp3']
-        }),
-        roundStack;
+		termStack,
+		buzzer = new howler.Howl({
+			// src: ['data:audio/mp3;base64,' + buzzerData]
+			src: ['data/audio/buzzer.mp3']
+		}),
+		roundStack;
 
-    movies = json.parse(movies);
-    persons = json.parse(persons);
-    terms = movies;
+	movies = json.parse(movies);
+	persons = json.parse(persons);
+	terms = movies;
 
-    function startTurn() {
-        startTimer();
-        showCard();
-    }
+	function startTurn() {
+		startTimer();
+		showCard();
+	}
 
-    function startTimer() {
-        clearInterval(timerInterval);
-        timerCountdown = timerTtl;
-        timerInterval = setInterval(function () {
-            timerContainer.html(timerCountdown);
-            if (timerCountdown === 0) {
-                clearInterval(timerInterval);
-                game.trigger('timesup');
-            }
-            if (timerCountdown === 3) {
-                buzzer.play();
-            }
-            timerCountdown--;
-        }, 1000);
+	function enableCaffein() {
+		caffein.enable();
+		document.removeEventListener('touchstart', enableCaffein, false);
+	}
 
-        startBtn.attr('disabled', 1);
-        nextCardBtn.removeAttr('disabled');
-        // cancelCardBtn.removeAttr('disabled');
-    }
+	function startTimer() {
+		clearInterval(timerInterval);
+		document.addEventListener('touchstart', enableCaffein, false);
+		timerCountdown = timerTtl;
+		timerInterval = setInterval(function () {
+			timerContainer.html(timerCountdown);
+			if (timerCountdown === 0) {
+				clearInterval(timerInterval);
+				caffein.disable();
+				game.trigger('timesup');
+			}
+			if (timerCountdown === 3) {
+				buzzer.play();
+			}
+			timerCountdown--;
+		}, 1000);
 
-    game.on('timesup', function () {
-        if (currentTerm && currentTermCount == 0) {
-            roundStack.unshift(currentTerm);
-        }
-        team = team === 'a' ? 'b' : 'a';
-        $('h1.term').html('Nächstes Team');
-        startBtn.removeAttr('disabled');
-        nextCardBtn.attr('disabled', 1);
-        buzzer.play();
+		startBtn.attr('disabled', 1);
+		nextCardBtn.removeAttr('disabled');
+		// cancelCardBtn.removeAttr('disabled');
+	}
 
-        if (roundStack.length === 0) {
-            if (round < 3) {
-                round++;
-                roundStack = shuffle(termStack.slice(0));
+	game.on('timesup', function () {
+		if (currentTerm && currentTermCount == 0) {
+			roundStack.unshift(currentTerm);
+		}
+		team = team === 'a' ? 'b' : 'a';
+		$('h1.term').html('Nächstes Team');
+		startBtn.removeAttr('disabled');
+		nextCardBtn.attr('disabled', 1);
+		buzzer.play();
 
-                $('h1.term').html('Nächste Runde');
-                var scoreA = $('td.score.total.team-a').html(),
-                    scoreB = $('td.score.total.team-b').html();
-                if (scoreA >= scoreB) {
-                    team = 'b';
-                } else {
-                    team = 'a';
-                }
-            } else {
-                $('h1.term').html('ENDE');
-                startBtn.attr('disabled', 1);
-            }
-        }
-        refreshScoreBoard();
-        refreshInfo();
-    });
+		if (roundStack.length === 0) {
+			if (round < 3) {
+				round++;
+				roundStack = shuffle(termStack.slice(0));
 
-    function shuffle(o){
-        for (var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
-        return o;
-    }
+				$('h1.term').html('Nächste Runde');
+				var scoreA = $('td.score.total.team-a').html(),
+					scoreB = $('td.score.total.team-b').html();
+				if (scoreA >= scoreB) {
+					team = 'b';
+				} else {
+					team = 'a';
+				}
+			} else {
+				$('h1.term').html('ENDE');
+				startBtn.attr('disabled', 1);
+			}
+		}
+		refreshScoreBoard();
+		refreshInfo();
+	});
 
-    function newGame() {
-        termStack = getInitialTerms(terms.terms);
-        roundStack = shuffle(termStack.slice(0));
-        timerContainer.html(timerTtl);
-        resetScores();
-        refreshScoreBoard();
-        refreshInfo();
-    }
+	function shuffle(o){
+		for (var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
+		return o;
+	}
 
-    function showCard() {
-        var newTerm = roundStack.shift();
-        if (newTerm == currentTerm) {
-            currentTermCount++;
-        } else {
-            currentTermCount = 0;
-        }
-        currentTerm = newTerm;
-        $('h1.term').html(currentTerm);
-        refreshScoreBoard();
-        refreshInfo();
-    }
+	function newGame() {
+		termStack = getInitialTerms(terms.terms);
+		roundStack = shuffle(termStack.slice(0));
+		timerContainer.html(timerTtl);
+		resetScores();
+		refreshScoreBoard();
+		refreshInfo();
+	}
 
-    function nextCard() {
-        var newTerm = roundStack.shift();
-        if (currentTerm == newTerm) {
-            currentTermCount++;
-        } else {
-            currentTermCount = 0;
-        }
-        currentTerm = newTerm;
+	function showCard() {
+		var newTerm = roundStack.shift();
+		if (newTerm == currentTerm) {
+			currentTermCount++;
+		} else {
+			currentTermCount = 0;
+		}
+		currentTerm = newTerm;
+		$('h1.term').html(currentTerm);
+		refreshScoreBoard();
+		refreshInfo();
+	}
 
-        if (currentTerm) {
-            $('h1.term').html(currentTerm);
-        } else {
-            if (timerCountdown > 5) {
-                timerCountdown = 2;
-            }
-            $('h1.term').html('');
-            nextCardBtn.attr('disabled', 1);
-        }
-        scores['round-' + round]['team-' + team]++;
-        refreshScoreBoard();
-        refreshInfo();
-    }
+	function nextCard() {
+		var newTerm = roundStack.shift();
+		if (currentTerm == newTerm) {
+			currentTermCount++;
+		} else {
+			currentTermCount = 0;
+		}
+		currentTerm = newTerm;
 
-    function resetScores() {
-        scores['round-1']['team-a'] = 0;
-        scores['round-1']['team-b'] = 0;
-        scores['round-2']['team-a'] = 0;
-        scores['round-2']['team-b'] = 0;
-        scores['round-3']['team-a'] = 0;
-        scores['round-3']['team-b'] = 0;
-    }
+		if (currentTerm) {
+			$('h1.term').html(currentTerm);
+		} else {
+			if (timerCountdown > 5) {
+				timerCountdown = 2;
+			}
+			$('h1.term').html('');
+			nextCardBtn.attr('disabled', 1);
+		}
+		scores['round-' + round]['team-' + team]++;
+		refreshScoreBoard();
+		refreshInfo();
+	}
 
-    function refreshScoreBoard() {
-        var totalA = 0,
-            totalB = 0;
+	function resetScores() {
+		scores['round-1']['team-a'] = 0;
+		scores['round-1']['team-b'] = 0;
+		scores['round-2']['team-a'] = 0;
+		scores['round-2']['team-b'] = 0;
+		scores['round-3']['team-a'] = 0;
+		scores['round-3']['team-b'] = 0;
+	}
 
-        for (var round in scores) {
-            for (var team in scores[round]) {
-                $('td.score.' + round + '.' + team).html(scores[round][team]);
-                if (team === 'team-a') {
-                    totalA += scores[round][team];
-                } else if (team === 'team-b') {
-                    totalB += scores[round][team];
-                }
-            }
-        }
+	function refreshScoreBoard() {
+		var totalA = 0,
+			totalB = 0;
 
-        $('td.score.total.team-a').html(totalA);
-        $('td.score.total.team-b').html(totalB);
-    }
+		for (var round in scores) {
+			for (var team in scores[round]) {
+				$('td.score.' + round + '.' + team).html(scores[round][team]);
+				if (team === 'team-a') {
+					totalA += scores[round][team];
+				} else if (team === 'team-b') {
+					totalB += scores[round][team];
+				}
+			}
+		}
 
-    function refreshInfo() {
-        $('h3.info span.round').html('Runde ' + round);
-        $('h3.info span.team').html('Team ' + team.toUpperCase());
-        $('h3.info span.badge').html(roundStack.length);
-    }
+		$('td.score.total.team-a').html(totalA);
+		$('td.score.total.team-b').html(totalB);
+	}
 
-    function getInitialTerms(terms) {
-        var counter = 0,
-            termIds = {},
-            termStack = [],
-            pos;
+	function refreshInfo() {
+		$('h3.info span.round').html('Runde ' + round);
+		$('h3.info span.team').html('Team ' + team.toUpperCase());
+		$('h3.info span.badge').html(roundStack.length);
+	}
 
-        while (counter < termCount) {
-            pos = Math.floor(Math.random() * terms.length);
-            if (!termIds.hasOwnProperty(pos)) {
-                termIds[pos] = pos;
-                counter++;
-            }
-        }
+	function getInitialTerms(terms) {
+		var counter = 0,
+			termIds = {},
+			termStack = [],
+			pos;
 
-        for (pos in termIds) {
-            termStack.push(terms[pos]);
-        }
-        return termStack;
-    }
+		while (counter < termCount) {
+			pos = Math.floor(Math.random() * terms.length);
+			if (!termIds.hasOwnProperty(pos)) {
+				termIds[pos] = pos;
+				counter++;
+			}
+		}
 
-    function onNewGame() {
-        var scoreA = $('td.score.total.team-a').html(),
-            scoreB = $('td.score.total.team-b').html();
-        if (scoreA >= scoreB) {
-            team = 'b';
-        } else {
-            team = 'a';
-        }
-        clearInterval(timerInterval);
-        newGame();
-        $('h1.term').html('NEUES SPIEL');
-        startBtn.removeAttr('disabled');
-        nextCardBtn.attr('disabled', 1);
-        round = 1;
-        $('button.navbar-toggle').trigger('click');
-        return false;
-    }
+		for (pos in termIds) {
+			termStack.push(terms[pos]);
+		}
+		return termStack;
+	}
 
-    //function onScorePrevTerm() {
-    //    refreshScoreBoard();
-    //    refreshInfo();
-    //    return false;
-    //}
+	function onNewGame() {
+		var scoreA = $('td.score.total.team-a').html(),
+			scoreB = $('td.score.total.team-b').html();
+		if (scoreA >= scoreB) {
+			team = 'b';
+		} else {
+			team = 'a';
+		}
+		clearInterval(timerInterval);
+		newGame();
+		$('h1.term').html('NEUES SPIEL');
+		startBtn.removeAttr('disabled');
+		nextCardBtn.attr('disabled', 1);
+		round = 1;
+		$('button.navbar-toggle').trigger('click');
+		return false;
+	}
 
-    function setTermsMovies() {
-        terms = movies;
-        return onNewGame();
-    }
-    function setTermsPersons() {
-        terms = persons;
-        return onNewGame();
-    }
+	//function onScorePrevTerm() {
+	//	refreshScoreBoard();
+	//	refreshInfo();
+	//	return false;
+	//}
+
+	function setTermsMovies() {
+		terms = movies;
+		return onNewGame();
+	}
+	function setTermsPersons() {
+		terms = persons;
+		return onNewGame();
+	}
 
 
-    newGame();
-    startBtn.on('click', startTurn);
-    nextCardBtn.on('click', nextCard);
-    //newGameBtn.on('click', onNewGame);
-    //scorePrevTermBtn.on('click', onScorePrevTerm);
-    setTermsMoviesBtn.on('click', setTermsMovies);
-    setTermsPersonsBtn.on('click', setTermsPersons);
+	newGame();
+	startBtn.on('click', startTurn);
+	nextCardBtn.on('click', nextCard);
+	//newGameBtn.on('click', onNewGame);
+	//scorePrevTermBtn.on('click', onScorePrevTerm);
+	setTermsMoviesBtn.on('click', setTermsMovies);
+	setTermsPersonsBtn.on('click', setTermsPersons);
 
 	if (bongo.supported) {
 		var db = bongo.db({

@@ -12,7 +12,8 @@
     "json2-bower": "1.0.1",
     "promise-js": "promise-js#0.0.5",
     "howler": "https://github.com/goldfire/howler.js.git#v2.0.0-beta5",
-	"bongo": "https://github.com/aaronshaf/bongo.js.git#master"
+	"bongo": "https://github.com/aaronshaf/bongo.js.git#master",
+	"nosleep": "https://github.com/richtr/NoSleep.js.git#master"
   },
-  "homepage": "ssl.godmode-trader.de"
+  "homepage": "www.patrickhill.de/timesup/"
 }

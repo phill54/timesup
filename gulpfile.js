@@ -32,12 +32,16 @@ var gulp = require('gulp-help')(require('gulp')),
 			normalize: '../deps/requirejs-css/normalize',
 			'css-builder': '../deps/requirejs-css/css-builder',
 			howler: '../deps/howler/howler.min',
-			bongo: '../deps/bongo/dist/bongo.min'
+			bongo: '../deps/bongo/dist/bongo.min',
+			nosleep: '../deps/nosleep/NoSleep.min',
         },
         inlineText: true,
         shim: {
             "jquery": {
                 "exports": "jQuery"
+            },
+			"nosleep": {
+                "exports": "NoSleep"
             },
             "css": {
                 "deps": ['text']
@@ -50,7 +54,7 @@ var gulp = require('gulp-help')(require('gulp')),
                 ],
                 "exports": "$.fn.popover"
             },
-            json: {
+            "json": {
                 exports: 'JSON'
             }
         },
