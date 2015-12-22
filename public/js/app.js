@@ -432,402 +432,10 @@ var requirejs, require, define;
 
 define("requireLib", function(){});
 
-/**
- * @license RequireJS text 2.0.14 Copyright (c) 2010-2014, The Dojo Foundation All Rights Reserved.
- * Available via the MIT or new BSD license.
- * see: http://github.com/requirejs/text for details
- */
-/*jslint regexp: true */
-/*global require, XMLHttpRequest, ActiveXObject,
-  define, window, process, Packages,
-  java, location, Components, FileUtils */
-
-define('text',['module'], function (module) {
-    
-
-    var text, fs, Cc, Ci, xpcIsWindows,
-        progIds = ['Msxml2.XMLHTTP', 'Microsoft.XMLHTTP', 'Msxml2.XMLHTTP.4.0'],
-        xmlRegExp = /^\s*<\?xml(\s)+version=[\'\"](\d)*.(\d)*[\'\"](\s)*\?>/im,
-        bodyRegExp = /<body[^>]*>\s*([\s\S]+)\s*<\/body>/im,
-        hasLocation = typeof location !== 'undefined' && location.href,
-        defaultProtocol = hasLocation && location.protocol && location.protocol.replace(/\:/, ''),
-        defaultHostName = hasLocation && location.hostname,
-        defaultPort = hasLocation && (location.port || undefined),
-        buildMap = {},
-        masterConfig = (module.config && module.config()) || {};
-
-    text = {
-        version: '2.0.14',
-
-        strip: function (content) {
-            //Strips <?xml ...?> declarations so that external SVG and XML
-            //documents can be added to a document without worry. Also, if the string
-            //is an HTML document, only the part inside the body tag is returned.
-            if (content) {
-                content = content.replace(xmlRegExp, "");
-                var matches = content.match(bodyRegExp);
-                if (matches) {
-                    content = matches[1];
-                }
-            } else {
-                content = "";
-            }
-            return content;
-        },
-
-        jsEscape: function (content) {
-            return content.replace(/(['\\])/g, '\\$1')
-                .replace(/[\f]/g, "\\f")
-                .replace(/[\b]/g, "\\b")
-                .replace(/[\n]/g, "\\n")
-                .replace(/[\t]/g, "\\t")
-                .replace(/[\r]/g, "\\r")
-                .replace(/[\u2028]/g, "\\u2028")
-                .replace(/[\u2029]/g, "\\u2029");
-        },
-
-        createXhr: masterConfig.createXhr || function () {
-            //Would love to dump the ActiveX crap in here. Need IE 6 to die first.
-            var xhr, i, progId;
-            if (typeof XMLHttpRequest !== "undefined") {
-                return new XMLHttpRequest();
-            } else if (typeof ActiveXObject !== "undefined") {
-                for (i = 0; i < 3; i += 1) {
-                    progId = progIds[i];
-                    try {
-                        xhr = new ActiveXObject(progId);
-                    } catch (e) {}
-
-                    if (xhr) {
-                        progIds = [progId];  // so faster next time
-                        break;
-                    }
-                }
-            }
-
-            return xhr;
-        },
-
-        /**
-         * Parses a resource name into its component parts. Resource names
-         * look like: module/name.ext!strip, where the !strip part is
-         * optional.
-         * @param {String} name the resource name
-         * @returns {Object} with properties "moduleName", "ext" and "strip"
-         * where strip is a boolean.
-         */
-        parseName: function (name) {
-            var modName, ext, temp,
-                strip = false,
-                index = name.lastIndexOf("."),
-                isRelative = name.indexOf('./') === 0 ||
-                             name.indexOf('../') === 0;
-
-            if (index !== -1 && (!isRelative || index > 1)) {
-                modName = name.substring(0, index);
-                ext = name.substring(index + 1);
-            } else {
-                modName = name;
-            }
-
-            temp = ext || modName;
-            index = temp.indexOf("!");
-            if (index !== -1) {
-                //Pull off the strip arg.
-                strip = temp.substring(index + 1) === "strip";
-                temp = temp.substring(0, index);
-                if (ext) {
-                    ext = temp;
-                } else {
-                    modName = temp;
-                }
-            }
-
-            return {
-                moduleName: modName,
-                ext: ext,
-                strip: strip
-            };
-        },
-
-        xdRegExp: /^((\w+)\:)?\/\/([^\/\\]+)/,
-
-        /**
-         * Is an URL on another domain. Only works for browser use, returns
-         * false in non-browser environments. Only used to know if an
-         * optimized .js version of a text resource should be loaded
-         * instead.
-         * @param {String} url
-         * @returns Boolean
-         */
-        useXhr: function (url, protocol, hostname, port) {
-            var uProtocol, uHostName, uPort,
-                match = text.xdRegExp.exec(url);
-            if (!match) {
-                return true;
-            }
-            uProtocol = match[2];
-            uHostName = match[3];
-
-            uHostName = uHostName.split(':');
-            uPort = uHostName[1];
-            uHostName = uHostName[0];
-
-            return (!uProtocol || uProtocol === protocol) &&
-                   (!uHostName || uHostName.toLowerCase() === hostname.toLowerCase()) &&
-                   ((!uPort && !uHostName) || uPort === port);
-        },
-
-        finishLoad: function (name, strip, content, onLoad) {
-            content = strip ? text.strip(content) : content;
-            if (masterConfig.isBuild) {
-                buildMap[name] = content;
-            }
-            onLoad(content);
-        },
-
-        load: function (name, req, onLoad, config) {
-            //Name has format: some.module.filext!strip
-            //The strip part is optional.
-            //if strip is present, then that means only get the string contents
-            //inside a body tag in an HTML string. For XML/SVG content it means
-            //removing the <?xml ...?> declarations so the content can be inserted
-            //into the current doc without problems.
-
-            // Do not bother with the work if a build and text will
-            // not be inlined.
-            if (config && config.isBuild && !config.inlineText) {
-                onLoad();
-                return;
-            }
-
-            masterConfig.isBuild = config && config.isBuild;
-
-            var parsed = text.parseName(name),
-                nonStripName = parsed.moduleName +
-                    (parsed.ext ? '.' + parsed.ext : ''),
-                url = req.toUrl(nonStripName),
-                useXhr = (masterConfig.useXhr) ||
-                         text.useXhr;
-
-            // Do not load if it is an empty: url
-            if (url.indexOf('empty:') === 0) {
-                onLoad();
-                return;
-            }
-
-            //Load the text. Use XHR if possible and in a browser.
-            if (!hasLocation || useXhr(url, defaultProtocol, defaultHostName, defaultPort)) {
-                text.get(url, function (content) {
-                    text.finishLoad(name, parsed.strip, content, onLoad);
-                }, function (err) {
-                    if (onLoad.error) {
-                        onLoad.error(err);
-                    }
-                });
-            } else {
-                //Need to fetch the resource across domains. Assume
-                //the resource has been optimized into a JS module. Fetch
-                //by the module name + extension, but do not include the
-                //!strip part to avoid file system issues.
-                req([nonStripName], function (content) {
-                    text.finishLoad(parsed.moduleName + '.' + parsed.ext,
-                                    parsed.strip, content, onLoad);
-                });
-            }
-        },
-
-        write: function (pluginName, moduleName, write, config) {
-            if (buildMap.hasOwnProperty(moduleName)) {
-                var content = text.jsEscape(buildMap[moduleName]);
-                write.asModule(pluginName + "!" + moduleName,
-                               "define(function () { return '" +
-                                   content +
-                               "';});\n");
-            }
-        },
-
-        writeFile: function (pluginName, moduleName, req, write, config) {
-            var parsed = text.parseName(moduleName),
-                extPart = parsed.ext ? '.' + parsed.ext : '',
-                nonStripName = parsed.moduleName + extPart,
-                //Use a '.js' file name so that it indicates it is a
-                //script that can be loaded across domains.
-                fileName = req.toUrl(parsed.moduleName + extPart) + '.js';
-
-            //Leverage own load() method to load plugin value, but only
-            //write out values that do not have the strip argument,
-            //to avoid any potential issues with ! in file names.
-            text.load(nonStripName, req, function (value) {
-                //Use own write() method to construct full module value.
-                //But need to create shell that translates writeFile's
-                //write() to the right interface.
-                var textWrite = function (contents) {
-                    return write(fileName, contents);
-                };
-                textWrite.asModule = function (moduleName, contents) {
-                    return write.asModule(moduleName, fileName, contents);
-                };
-
-                text.write(pluginName, nonStripName, textWrite, config);
-            }, config);
-        }
-    };
-
-    if (masterConfig.env === 'node' || (!masterConfig.env &&
-            typeof process !== "undefined" &&
-            process.versions &&
-            !!process.versions.node &&
-            !process.versions['node-webkit'] &&
-            !process.versions['atom-shell'])) {
-        //Using special require.nodeRequire, something added by r.js.
-        fs = require.nodeRequire('fs');
-
-        text.get = function (url, callback, errback) {
-            try {
-                var file = fs.readFileSync(url, 'utf8');
-                //Remove BOM (Byte Mark Order) from utf8 files if it is there.
-                if (file[0] === '\uFEFF') {
-                    file = file.substring(1);
-                }
-                callback(file);
-            } catch (e) {
-                if (errback) {
-                    errback(e);
-                }
-            }
-        };
-    } else if (masterConfig.env === 'xhr' || (!masterConfig.env &&
-            text.createXhr())) {
-        text.get = function (url, callback, errback, headers) {
-            var xhr = text.createXhr(), header;
-            xhr.open('GET', url, true);
-
-            //Allow plugins direct access to xhr headers
-            if (headers) {
-                for (header in headers) {
-                    if (headers.hasOwnProperty(header)) {
-                        xhr.setRequestHeader(header.toLowerCase(), headers[header]);
-                    }
-                }
-            }
-
-            //Allow overrides specified in config
-            if (masterConfig.onXhr) {
-                masterConfig.onXhr(xhr, url);
-            }
-
-            xhr.onreadystatechange = function (evt) {
-                var status, err;
-                //Do not explicitly handle errors, those should be
-                //visible via console output in the browser.
-                if (xhr.readyState === 4) {
-                    status = xhr.status || 0;
-                    if (status > 399 && status < 600) {
-                        //An http 4xx or 5xx error. Signal an error.
-                        err = new Error(url + ' HTTP status: ' + status);
-                        err.xhr = xhr;
-                        if (errback) {
-                            errback(err);
-                        }
-                    } else {
-                        callback(xhr.responseText);
-                    }
-
-                    if (masterConfig.onXhrComplete) {
-                        masterConfig.onXhrComplete(xhr, url);
-                    }
-                }
-            };
-            xhr.send(null);
-        };
-    } else if (masterConfig.env === 'rhino' || (!masterConfig.env &&
-            typeof Packages !== 'undefined' && typeof java !== 'undefined')) {
-        //Why Java, why is this so awkward?
-        text.get = function (url, callback) {
-            var stringBuffer, line,
-                encoding = "utf-8",
-                file = new java.io.File(url),
-                lineSeparator = java.lang.System.getProperty("line.separator"),
-                input = new java.io.BufferedReader(new java.io.InputStreamReader(new java.io.FileInputStream(file), encoding)),
-                content = '';
-            try {
-                stringBuffer = new java.lang.StringBuffer();
-                line = input.readLine();
-
-                // Byte Order Mark (BOM) - The Unicode Standard, version 3.0, page 324
-                // http://www.unicode.org/faq/utf_bom.html
-
-                // Note that when we use utf-8, the BOM should appear as "EF BB BF", but it doesn't due to this bug in the JDK:
-                // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4508058
-                if (line && line.length() && line.charAt(0) === 0xfeff) {
-                    // Eat the BOM, since we've already found the encoding on this file,
-                    // and we plan to concatenating this buffer with others; the BOM should
-                    // only appear at the top of a file.
-                    line = line.substring(1);
-                }
-
-                if (line !== null) {
-                    stringBuffer.append(line);
-                }
-
-                while ((line = input.readLine()) !== null) {
-                    stringBuffer.append(lineSeparator);
-                    stringBuffer.append(line);
-                }
-                //Make sure we return a JavaScript string and not a Java string.
-                content = String(stringBuffer.toString()); //String
-            } finally {
-                input.close();
-            }
-            callback(content);
-        };
-    } else if (masterConfig.env === 'xpconnect' || (!masterConfig.env &&
-            typeof Components !== 'undefined' && Components.classes &&
-            Components.interfaces)) {
-        //Avert your gaze!
-        Cc = Components.classes;
-        Ci = Components.interfaces;
-        Components.utils['import']('resource://gre/modules/FileUtils.jsm');
-        xpcIsWindows = ('@mozilla.org/windows-registry-key;1' in Cc);
-
-        text.get = function (url, callback) {
-            var inStream, convertStream, fileObj,
-                readData = {};
-
-            if (xpcIsWindows) {
-                url = url.replace(/\//g, '\\');
-            }
-
-            fileObj = new FileUtils.File(url);
-
-            //XPCOM, you so crazy
-            try {
-                inStream = Cc['@mozilla.org/network/file-input-stream;1']
-                           .createInstance(Ci.nsIFileInputStream);
-                inStream.init(fileObj, 1, 0, false);
-
-                convertStream = Cc['@mozilla.org/intl/converter-input-stream;1']
-                                .createInstance(Ci.nsIConverterInputStream);
-                convertStream.init(inStream, "utf-8", inStream.available(),
-                Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
-
-                convertStream.readString(inStream.available(), readData);
-                convertStream.close();
-                inStream.close();
-                callback(readData.value);
-            } catch (e) {
-                throw new Error((fileObj && fileObj.path || '') + ': ' + e);
-            }
-        };
-    }
-    return text;
-});
-
 
 
 require.config({
-	baseUrl: 'js/app',
+	baseUrl: 'js',
 	//,paths: {
 	//	tpl: '../tpl'
 	//	//tinymce: '../deps/bower-tinymce-amd/tinyMCE',
@@ -3188,503 +2796,6 @@ define("bootstrap", ["jquery"], (function (global) {
     };
 }(this)));
 
-/*
-    json2.js
-    2014-02-04
-
-    Public Domain.
-
-    NO WARRANTY EXPRESSED OR IMPLIED. USE AT YOUR OWN RISK.
-
-    See http://www.JSON.org/js.html
-
-
-    This code should be minified before deployment.
-    See http://javascript.crockford.com/jsmin.html
-
-    USE YOUR OWN COPY. IT IS EXTREMELY UNWISE TO LOAD CODE FROM SERVERS YOU DO
-    NOT CONTROL.
-
-
-    This file creates a global JSON object containing two methods: stringify
-    and parse.
-
-        JSON.stringify(value, replacer, space)
-            value       any JavaScript value, usually an object or array.
-
-            replacer    an optional parameter that determines how object
-                        values are stringified for objects. It can be a
-                        function or an array of strings.
-
-            space       an optional parameter that specifies the indentation
-                        of nested structures. If it is omitted, the text will
-                        be packed without extra whitespace. If it is a number,
-                        it will specify the number of spaces to indent at each
-                        level. If it is a string (such as '\t' or '&nbsp;'),
-                        it contains the characters used to indent at each level.
-
-            This method produces a JSON text from a JavaScript value.
-
-            When an object value is found, if the object contains a toJSON
-            method, its toJSON method will be called and the result will be
-            stringified. A toJSON method does not serialize: it returns the
-            value represented by the name/value pair that should be serialized,
-            or undefined if nothing should be serialized. The toJSON method
-            will be passed the key associated with the value, and this will be
-            bound to the value
-
-            For example, this would serialize Dates as ISO strings.
-
-                Date.prototype.toJSON = function (key) {
-                    function f(n) {
-                        // Format integers to have at least two digits.
-                        return n < 10 ? '0' + n : n;
-                    }
-
-                    return this.getUTCFullYear()   + '-' +
-                         f(this.getUTCMonth() + 1) + '-' +
-                         f(this.getUTCDate())      + 'T' +
-                         f(this.getUTCHours())     + ':' +
-                         f(this.getUTCMinutes())   + ':' +
-                         f(this.getUTCSeconds())   + 'Z';
-                };
-
-            You can provide an optional replacer method. It will be passed the
-            key and value of each member, with this bound to the containing
-            object. The value that is returned from your method will be
-            serialized. If your method returns undefined, then the member will
-            be excluded from the serialization.
-
-            If the replacer parameter is an array of strings, then it will be
-            used to select the members to be serialized. It filters the results
-            such that only members with keys listed in the replacer array are
-            stringified.
-
-            Values that do not have JSON representations, such as undefined or
-            functions, will not be serialized. Such values in objects will be
-            dropped; in arrays they will be replaced with null. You can use
-            a replacer function to replace those with JSON values.
-            JSON.stringify(undefined) returns undefined.
-
-            The optional space parameter produces a stringification of the
-            value that is filled with line breaks and indentation to make it
-            easier to read.
-
-            If the space parameter is a non-empty string, then that string will
-            be used for indentation. If the space parameter is a number, then
-            the indentation will be that many spaces.
-
-            Example:
-
-            text = JSON.stringify(['e', {pluribus: 'unum'}]);
-            // text is '["e",{"pluribus":"unum"}]'
-
-
-            text = JSON.stringify(['e', {pluribus: 'unum'}], null, '\t');
-            // text is '[\n\t"e",\n\t{\n\t\t"pluribus": "unum"\n\t}\n]'
-
-            text = JSON.stringify([new Date()], function (key, value) {
-                return this[key] instanceof Date ?
-                    'Date(' + this[key] + ')' : value;
-            });
-            // text is '["Date(---current time---)"]'
-
-
-        JSON.parse(text, reviver)
-            This method parses a JSON text to produce an object or array.
-            It can throw a SyntaxError exception.
-
-            The optional reviver parameter is a function that can filter and
-            transform the results. It receives each of the keys and values,
-            and its return value is used instead of the original value.
-            If it returns what it received, then the structure is not modified.
-            If it returns undefined then the member is deleted.
-
-            Example:
-
-            // Parse the text. Values that look like ISO date strings will
-            // be converted to Date objects.
-
-            myData = JSON.parse(text, function (key, value) {
-                var a;
-                if (typeof value === 'string') {
-                    a =
-/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)Z$/.exec(value);
-                    if (a) {
-                        return new Date(Date.UTC(+a[1], +a[2] - 1, +a[3], +a[4],
-                            +a[5], +a[6]));
-                    }
-                }
-                return value;
-            });
-
-            myData = JSON.parse('["Date(09/09/2001)"]', function (key, value) {
-                var d;
-                if (typeof value === 'string' &&
-                        value.slice(0, 5) === 'Date(' &&
-                        value.slice(-1) === ')') {
-                    d = new Date(value.slice(5, -1));
-                    if (d) {
-                        return d;
-                    }
-                }
-                return value;
-            });
-
-
-    This is a reference implementation. You are free to copy, modify, or
-    redistribute.
-*/
-
-/*jslint evil: true, regexp: true */
-
-/*members "", "\b", "\t", "\n", "\f", "\r", "\"", JSON, "\\", apply,
-    call, charCodeAt, getUTCDate, getUTCFullYear, getUTCHours,
-    getUTCMinutes, getUTCMonth, getUTCSeconds, hasOwnProperty, join,
-    lastIndex, length, parse, prototype, push, replace, slice, stringify,
-    test, toJSON, toString, valueOf
-*/
-
-
-// Create a JSON object only if one does not already exist. We create the
-// methods in a closure to avoid creating global variables.
-
-if (typeof JSON !== 'object') {
-    JSON = {};
-}
-
-(function () {
-    
-
-    function f(n) {
-        // Format integers to have at least two digits.
-        return n < 10 ? '0' + n : n;
-    }
-
-    if (typeof Date.prototype.toJSON !== 'function') {
-
-        Date.prototype.toJSON = function () {
-
-            return isFinite(this.valueOf())
-                ? this.getUTCFullYear()     + '-' +
-                    f(this.getUTCMonth() + 1) + '-' +
-                    f(this.getUTCDate())      + 'T' +
-                    f(this.getUTCHours())     + ':' +
-                    f(this.getUTCMinutes())   + ':' +
-                    f(this.getUTCSeconds())   + 'Z'
-                : null;
-        };
-
-        String.prototype.toJSON      =
-            Number.prototype.toJSON  =
-            Boolean.prototype.toJSON = function () {
-                return this.valueOf();
-            };
-    }
-
-    var cx,
-        escapable,
-        gap,
-        indent,
-        meta,
-        rep;
-
-
-    function quote(string) {
-
-// If the string contains no control characters, no quote characters, and no
-// backslash characters, then we can safely slap some quotes around it.
-// Otherwise we must also replace the offending characters with safe escape
-// sequences.
-
-        escapable.lastIndex = 0;
-        return escapable.test(string) ? '"' + string.replace(escapable, function (a) {
-            var c = meta[a];
-            return typeof c === 'string'
-                ? c
-                : '\\u' + ('0000' + a.charCodeAt(0).toString(16)).slice(-4);
-        }) + '"' : '"' + string + '"';
-    }
-
-
-    function str(key, holder) {
-
-// Produce a string from holder[key].
-
-        var i,          // The loop counter.
-            k,          // The member key.
-            v,          // The member value.
-            length,
-            mind = gap,
-            partial,
-            value = holder[key];
-
-// If the value has a toJSON method, call it to obtain a replacement value.
-
-        if (value && typeof value === 'object' &&
-                typeof value.toJSON === 'function') {
-            value = value.toJSON(key);
-        }
-
-// If we were called with a replacer function, then call the replacer to
-// obtain a replacement value.
-
-        if (typeof rep === 'function') {
-            value = rep.call(holder, key, value);
-        }
-
-// What happens next depends on the value's type.
-
-        switch (typeof value) {
-        case 'string':
-            return quote(value);
-
-        case 'number':
-
-// JSON numbers must be finite. Encode non-finite numbers as null.
-
-            return isFinite(value) ? String(value) : 'null';
-
-        case 'boolean':
-        case 'null':
-
-// If the value is a boolean or null, convert it to a string. Note:
-// typeof null does not produce 'null'. The case is included here in
-// the remote chance that this gets fixed someday.
-
-            return String(value);
-
-// If the type is 'object', we might be dealing with an object or an array or
-// null.
-
-        case 'object':
-
-// Due to a specification blunder in ECMAScript, typeof null is 'object',
-// so watch out for that case.
-
-            if (!value) {
-                return 'null';
-            }
-
-// Make an array to hold the partial results of stringifying this object value.
-
-            gap += indent;
-            partial = [];
-
-// Is the value an array?
-
-            if (Object.prototype.toString.apply(value) === '[object Array]') {
-
-// The value is an array. Stringify every element. Use null as a placeholder
-// for non-JSON values.
-
-                length = value.length;
-                for (i = 0; i < length; i += 1) {
-                    partial[i] = str(i, value) || 'null';
-                }
-
-// Join all of the elements together, separated with commas, and wrap them in
-// brackets.
-
-                v = partial.length === 0
-                    ? '[]'
-                    : gap
-                    ? '[\n' + gap + partial.join(',\n' + gap) + '\n' + mind + ']'
-                    : '[' + partial.join(',') + ']';
-                gap = mind;
-                return v;
-            }
-
-// If the replacer is an array, use it to select the members to be stringified.
-
-            if (rep && typeof rep === 'object') {
-                length = rep.length;
-                for (i = 0; i < length; i += 1) {
-                    if (typeof rep[i] === 'string') {
-                        k = rep[i];
-                        v = str(k, value);
-                        if (v) {
-                            partial.push(quote(k) + (gap ? ': ' : ':') + v);
-                        }
-                    }
-                }
-            } else {
-
-// Otherwise, iterate through all of the keys in the object.
-
-                for (k in value) {
-                    if (Object.prototype.hasOwnProperty.call(value, k)) {
-                        v = str(k, value);
-                        if (v) {
-                            partial.push(quote(k) + (gap ? ': ' : ':') + v);
-                        }
-                    }
-                }
-            }
-
-// Join all of the member texts together, separated with commas,
-// and wrap them in braces.
-
-            v = partial.length === 0
-                ? '{}'
-                : gap
-                ? '{\n' + gap + partial.join(',\n' + gap) + '\n' + mind + '}'
-                : '{' + partial.join(',') + '}';
-            gap = mind;
-            return v;
-        }
-    }
-
-// If the JSON object does not yet have a stringify method, give it one.
-
-    if (typeof JSON.stringify !== 'function') {
-        escapable = /[\\\"\x00-\x1f\x7f-\x9f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g;
-        meta = {    // table of character substitutions
-            '\b': '\\b',
-            '\t': '\\t',
-            '\n': '\\n',
-            '\f': '\\f',
-            '\r': '\\r',
-            '"' : '\\"',
-            '\\': '\\\\'
-        };
-        JSON.stringify = function (value, replacer, space) {
-
-// The stringify method takes a value and an optional replacer, and an optional
-// space parameter, and returns a JSON text. The replacer can be a function
-// that can replace values, or an array of strings that will select the keys.
-// A default replacer method can be provided. Use of the space parameter can
-// produce text that is more easily readable.
-
-            var i;
-            gap = '';
-            indent = '';
-
-// If the space parameter is a number, make an indent string containing that
-// many spaces.
-
-            if (typeof space === 'number') {
-                for (i = 0; i < space; i += 1) {
-                    indent += ' ';
-                }
-
-// If the space parameter is a string, it will be used as the indent string.
-
-            } else if (typeof space === 'string') {
-                indent = space;
-            }
-
-// If there is a replacer, it must be a function or an array.
-// Otherwise, throw an error.
-
-            rep = replacer;
-            if (replacer && typeof replacer !== 'function' &&
-                    (typeof replacer !== 'object' ||
-                    typeof replacer.length !== 'number')) {
-                throw new Error('JSON.stringify');
-            }
-
-// Make a fake root object containing our value under the key of ''.
-// Return the result of stringifying the value.
-
-            return str('', {'': value});
-        };
-    }
-
-
-// If the JSON object does not yet have a parse method, give it one.
-
-    if (typeof JSON.parse !== 'function') {
-        cx = /[\u0000\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g;
-        JSON.parse = function (text, reviver) {
-
-// The parse method takes a text and an optional reviver function, and returns
-// a JavaScript value if the text is a valid JSON text.
-
-            var j;
-
-            function walk(holder, key) {
-
-// The walk method is used to recursively walk the resulting structure so
-// that modifications can be made.
-
-                var k, v, value = holder[key];
-                if (value && typeof value === 'object') {
-                    for (k in value) {
-                        if (Object.prototype.hasOwnProperty.call(value, k)) {
-                            v = walk(value, k);
-                            if (v !== undefined) {
-                                value[k] = v;
-                            } else {
-                                delete value[k];
-                            }
-                        }
-                    }
-                }
-                return reviver.call(holder, key, value);
-            }
-
-
-// Parsing happens in four stages. In the first stage, we replace certain
-// Unicode characters with escape sequences. JavaScript handles many characters
-// incorrectly, either silently deleting them, or treating them as line endings.
-
-            text = String(text);
-            cx.lastIndex = 0;
-            if (cx.test(text)) {
-                text = text.replace(cx, function (a) {
-                    return '\\u' +
-                        ('0000' + a.charCodeAt(0).toString(16)).slice(-4);
-                });
-            }
-
-// In the second stage, we run the text against regular expressions that look
-// for non-JSON patterns. We are especially concerned with '()' and 'new'
-// because they can cause invocation, and '=' because it can cause mutation.
-// But just to be safe, we want to reject all unexpected forms.
-
-// We split the second stage into 4 regexp operations in order to work around
-// crippling inefficiencies in IE's and Safari's regexp engines. First we
-// replace the JSON backslash pairs with '@' (a non-JSON character). Second, we
-// replace all simple value tokens with ']' characters. Third, we delete all
-// open brackets that follow a colon or comma or that begin the text. Finally,
-// we look to see that the remaining characters are only whitespace or ']' or
-// ',' or ':' or '{' or '}'. If that is so, then the text is safe for eval.
-
-            if (/^[\],:{}\s]*$/
-                    .test(text.replace(/\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g, '@')
-                        .replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, ']')
-                        .replace(/(?:^|:|,)(?:\s*\[)+/g, ''))) {
-
-// In the third stage we use the eval function to compile the text into a
-// JavaScript structure. The '{' operator is subject to a syntactic ambiguity
-// in JavaScript: it can begin a block or an object literal. We wrap the text
-// in parens to eliminate the ambiguity.
-
-                j = eval('(' + text + ')');
-
-// In the optional fourth stage, we recursively walk the new structure, passing
-// each name/value pair to a reviver function for possible transformation.
-
-                return typeof reviver === 'function'
-                    ? walk({'': j}, '')
-                    : j;
-            }
-
-// If the text is not JSON parseable, then a SyntaxError is thrown.
-
-            throw new SyntaxError('JSON.parse');
-        };
-    }
-}());
-
-define("json", (function (global) {
-    return function () {
-        var ret, fn;
-        return ret || global.JSON;
-    };
-}(this)));
-
 // NoSleep.min.js v0.5.0 - git.io/vfn01 - Rich Tibbett - MIT license
 !function(A){function e(A,e,o){var t=document.createElement("source");t.src=o,t.type="video/"+e,A.appendChild(t)}var o={Android:/Android/gi.test(navigator.userAgent),iOS:/AppleWebKit/.test(navigator.userAgent)&&/Mobile\/\w+/.test(navigator.userAgent)},t={WebM:"data:video/webm;base64,GkXfo0AgQoaBAUL3gQFC8oEEQvOBCEKCQAR3ZWJtQoeBAkKFgQIYU4BnQI0VSalmQCgq17FAAw9CQE2AQAZ3aGFtbXlXQUAGd2hhbW15RIlACECPQAAAAAAAFlSua0AxrkAu14EBY8WBAZyBACK1nEADdW5khkAFVl9WUDglhohAA1ZQOIOBAeBABrCBCLqBCB9DtnVAIueBAKNAHIEAAIAwAQCdASoIAAgAAUAmJaQAA3AA/vz0AAA=",MP4:"data:video/mp4;base64,AAAAHGZ0eXBpc29tAAACAGlzb21pc28ybXA0MQAAAAhmcmVlAAAAG21kYXQAAAGzABAHAAABthADAowdbb9/AAAC6W1vb3YAAABsbXZoZAAAAAB8JbCAfCWwgAAAA+gAAAAAAAEAAAEAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAIVdHJhawAAAFx0a2hkAAAAD3wlsIB8JbCAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAIAAAACAAAAAABsW1kaWEAAAAgbWRoZAAAAAB8JbCAfCWwgAAAA+gAAAAAVcQAAAAAAC1oZGxyAAAAAAAAAAB2aWRlAAAAAAAAAAAAAAAAVmlkZW9IYW5kbGVyAAAAAVxtaW5mAAAAFHZtaGQAAAABAAAAAAAAAAAAAAAkZGluZgAAABxkcmVmAAAAAAAAAAEAAAAMdXJsIAAAAAEAAAEcc3RibAAAALhzdHNkAAAAAAAAAAEAAACobXA0dgAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAIAAgASAAAAEgAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABj//wAAAFJlc2RzAAAAAANEAAEABDwgEQAAAAADDUAAAAAABS0AAAGwAQAAAbWJEwAAAQAAAAEgAMSNiB9FAEQBFGMAAAGyTGF2YzUyLjg3LjQGAQIAAAAYc3R0cwAAAAAAAAABAAAAAQAAAAAAAAAcc3RzYwAAAAAAAAABAAAAAQAAAAEAAAABAAAAFHN0c3oAAAAAAAAAEwAAAAEAAAAUc3RjbwAAAAAAAAABAAAALAAAAGB1ZHRhAAAAWG1ldGEAAAAAAAAAIWhkbHIAAAAAAAAAAG1kaXJhcHBsAAAAAAAAAAAAAAAAK2lsc3QAAAAjqXRvbwAAABtkYXRhAAAAAQAAAABMYXZmNTIuNzguMw=="},i=function(){return o.iOS?this.noSleepTimer=null:o.Android&&(this.noSleepVideo=document.createElement("video"),this.noSleepVideo.setAttribute("loop",""),e(this.noSleepVideo,"webm",t.WebM),e(this.noSleepVideo,"mp4",t.MP4)),this};i.prototype.enable=function(A){o.iOS?(this.disable(),this.noSleepTimer=window.setInterval(function(){window.location.href='/',window.setTimeout(window.stop,0)},A||15e3)):o.Android&&this.noSleepVideo.play()},i.prototype.disable=function(){o.iOS?this.noSleepTimer&&(window.clearInterval(this.noSleepTimer),this.noSleepTimer=null):o.Android&&this.noSleepVideo.pause()},A.NoSleep=i}(this);
 
@@ -3695,9 +2806,1008 @@ define("nosleep", (function (global) {
     };
 }(this)));
 
-define('text!data/terms/movies.json',[],function () { return '{\n  "terms": [\n    "Die glorreichen Sieben",\n    "Matrix",\n    "Spiderman",\n    "Was sie schon immer über Sex wissen wollten und nie zu fragen gewagt haben...",\n    "Free Willy",\n    "Kevin - allein zu Haus",\n    "Ein Hund namens Beethoven",\n    "Snatch - Schweine und Diamanten",\n    "Aristocats",\n    "König der Löwen",\n    "Speed",\n    "...denn Sie wissen nicht, was Sie tun",\n    "Giganten",\n    "Inglorious Basterds",\n    "Pulp Fiction",\n    "Kill Bill",\n    "Reservoir Dogs",\n    "Django Unchained",\n    "Harry Potter",\n    "James Bond - Skyfall",\n    "James Bond - Spectre",\n    "James Bond - Man lebt nur zweimal",\n    "James Bond - Liebesgrüße aus Moskau",\n    "James Bond - Diamantenfieber",\n    "James Bond - Goldfinger",\n    "James Bond - Goldeneye",\n    "James Bond - Der Spion, der mich liebte",\n    "James Bond jagt Dr. No ",\n    "James Bond - Feuerball",\n    "James Bond - Im Geheimdienst ihrer Majestät",\n    "James Bond - Casino Royal",\n    "Iron Man",\n    "Thor",\n    "The Avengers",\n    "Der unglaubliche Hulk",\n    "Ziemlich beste Freunde",\n    "Bube, Dame, König, grAs",\n    "Sherlock Holmes",\n    "Superman",\n    "The Dark Knight",\n    "12 Monkeys",\n    "Ein Fisch namens Wanda",\n    "Das Leben des Brian",\n    "Erdbeben",\n    "Die nackte Kanone",\n    "The Fast and the Furious",\n    "Avatar - Aufbruch nach Pandora",\n    "Titanic",\n    "Jurassic Park",\n    "E.T. - Der Ausserirdische",\n    "Der Hobbit",\n    "Der Herr der Ringe",\n    "Transformers",\n    "Fluch der Karibik",\n    "Findet Nemo",\n    "Die Monster AG",\n    "Shrek - der tollkühne Held",\n    "Independence Day",\n    "Krieg der Sterne",\n    "Die Tribute von Panem",\n    "Das Sakrileg",\n    "Gravity",\n    "Mission: Impossible",\n    "Twilight",\n    "Planet der Affen",\n    "Forrest Gump",\n    "The Sixth Sense",\n    "Men In Black",\n    "Vom Winde verweht",\n    "Der weiße Hai",\n    "Ben Hur",\n    "2001 - Odyssee im Weltraum",\n    "Der Pate",\n    "Der Exorzist",\n    "Rocky",\n    "Rambo",\n    "Zurück in die Zukunft",\n    "Rain Man",\n    "Indiana Jones und der letzte Kreuzzug",\n    "Terminator",\n    "Stirb Langsam",\n    "Die unendliche Geschichte",\n    "Lethal Weapon",\n    "V wie Vendetta",\n    "Ratatouille",\n    "Pretty Woman",\n    "Schlaflos in Seattle",\n    "E-Mail für Dich",\n    "Der bewegte Mann",\n    "Der Schuh des Manitu",\n    "Good Bye, Lenin!",\n    "Crocodile Dundee",\n    "Der Name der Rose",\n    "Love Story",\n    "Platoon",\n    "Full Metal Jacket",\n    "Good Morning Vietnam",\n    "Der Soldat James Ryan",\n    "Schindler\'s Liste",\n    "Das Leben ist schön",\n    "Das dreckige Dutzend",\n    "Spartacus",\n    "Lawrence von Arabien",\n    "Das Dschungelbuch",\n    "Armageddon",\n    "The Wolf of Wall Street",\n    "50 Shades of Grey",\n    "The King\'s Speech",\n    "The Hangover",\n    "World War Z",\n    "Wolverine",\n    "Les Miserables",\n    "Life of Pi",\n    "Alien",\n    "Black Swan",\n    "Iron Sky - Wir kommen in Frieden",\n    "Die drei Musketiere",\n    "Robin Hood - König der Diebe",\n    "Der mit dem Wolf tanzt",\n    "The Social Network",\n    "American Pie",\n    "American Beauty",\n    "Fight Club",\n    "Slumdog Millionaire",\n    "Wall-E - der letzte räumt die Erde auf",\n    "Ocean\'s Eleven",\n    "Der Teufel trägt Prada",\n    "Brokeback Mountain",\n    "King Kong",\n    "Königreich der Himmel",\n    "Der Untergang",\n    "Schtonk!",\n    "Catch me if you can",\n    "3 Engel für Charlie",\n    "Sex and the City",\n    "Miss Undercover",\n    "Tomb Raider",\n    "Gladiator",\n    "Erin Brokovich",\n    "X-Men",\n    "Die Mumie",\n    "Notting Hill",\n    "Godzilla",\n    "Lola rennt",\n    "Spiel mir das Lied vom Tod",\n    "Singin\' in the Rain",\n    "Tanz der Vampire",\n    "Thomas Crown ist nicht zu fassen",\n    "Magnolia",\n    "Wie ein wilder Stier",\n    "Der unsichtbare Dritte",\n    "Gangs of New York",\n    "Bonnie und Clyde",\n    "Einer flog über das Kuckucksnest",\n    "Die Katze auf dem heißen Blechdach",\n    "Underworld",\n    "Fahrenheit 451",\n    "Brazil",\n    "Tiger & Dragon",\n    "Lost Highway",\n    "Der letzte Tango in Paris",\n    "Jackie Brown",\n    "Lost in Translation",\n    "Der große Diktator",\n    "M. Eine Stadt sucht einen Mörder",\n    "Manhattan",\n    "L.A. Confidential",\n    "Arsen und Spitzenhäubchen",\n    "The Good, the Bad and the Ugly (Zwei glorreiche Halunken)",\n    "Fargo",\n    "Doktor Schiwago",\n    "Gefährliche Brandung",\n    "Wall Street",\n    "Shutter Island",\n    "The Beach",\n    "Aviator",\n    "Heat",\n    "Taxi Driver",\n    "Goodfellas",\n    "Es war einmal in Amerika",\n    "Mary Shelleys Frankenstein",\n    "Casino",\n    "Verrückt nach Mary",\n    "Zoolander",\n    "Reine Nervensache",\n    "Easy Rider",\n    "Shining",\n    "Wenn der Postmann zweimal klingelt",\n    "Mars Attacks!",\n    "Besser geht\'s nicht",\n    "Departed - Unter Feinden",\n    "Das Kartell",\n    "Die Stunde der Patrioten",\n    "Jagd auf Roter Oktober",\n    "Walt Disney\'s Fantasia",\n    "Schneewittchen",\n    "Alice im Wunderland",\n    "Der Zauberer von Oz",\n    "Das Leben der Anderen",\n    "Zweiohrküken",\n    "Die Fälscher",\n    "Die Welle",\n    "Keinohrhasen",\n    "Das Parfum",\n    "Knocking on Heaven\'s Door"\n  ]\n}';});
+/**
+ * @license RequireJS text 2.0.14 Copyright (c) 2010-2014, The Dojo Foundation All Rights Reserved.
+ * Available via the MIT or new BSD license.
+ * see: http://github.com/requirejs/text for details
+ */
+/*jslint regexp: true */
+/*global require, XMLHttpRequest, ActiveXObject,
+  define, window, process, Packages,
+  java, location, Components, FileUtils */
 
-define('text!data/terms/persons.json',[],function () { return '{\n  "terms": [\n    "Aristoteles",\n    "Archimedes",\n    "Kopernikus",\n    "Galileo Galilei",\n    "Johannes Kepler",\n    "Blaise Pascal",\n    "Isaac Newton",\n    "Daniel Bernoulli",\n    "Max Planck",\n    "Marie Curie",\n    "Ernest Rutherford",\n    "Albert Einstein",\n    "Werner Heisenberg",\n    "Stephen Hawking",\n    "Mohammed",\n    "Karl der Große",\n    "Dschingis Khan",\n    "Marco Polo",\n    "Leonardo da Vinci",\n    "Johannes Gutenberg",\n    "Ludwig XIV.",\n    "William Shakespeare",\n    "Johann Sebastian Bach",\n    "Georg Friedrich Händel",\n    "Immanuel Kant",\n    "Benjamin Franklin",\n    "Voltaire",\n    "George Washington",\n    "Friedrich Schiller",\n    "Napoleon Bonaparte",\n    "Ludwig van Beethoven",\n    "Abraham Lincoln",\n    "Thomas Jefferson",\n    "Charles Darwin",\n    "Queen Victoria",\n    "Mark Twain",\n    "Jules Verne",\n    "Louis Pasteur",\n    "Leo Tolstoi",\n    "Friedrich Nietzsche",\n    "Peter Tschaikowski",\n    "Wilhelm Conrad Röntgen",\n    "Sigmund Freud",\n    "Vincent van Gogh",\n    "Thomas Alva Edison",\n    "Mahatma Gandhi",\n    "Lenin",\n    "Pablo Picasso",\n    "Winston Churchill",\n    "Charlie Chaplin",\n    "Ernest Hemingway",\n    "Louis Armstrong",\n    "Walt Disney",\n    "Astrid Lindgren",\n    "Mutter Teresa",\n    "Willy Brandt",\n    "Frank Sinatra",\n    "John F. Kennedy",\n    "Nelson Mandela",\n    "Sophie Scholl",\n    "Marilyn Monroe",\n    "Che Guevara",\n    "Martin Luther King",\n    "Anne Frank",\n    "Neil Armstrong",\n    "Elvis Presley",\n    "John Lennon",\n    "Bob Marley",\n    "Michael Jackson",\n    "Julian Assange",\n    "David Cameron",\n    "Barack Obama",\n    "George W. Bush",\n    "Ronald Reagon",\n    "Jimmy Carter",\n    "Richard Nixon",\n    "Francois Hollande",\n    "Angela Merkel",\n    "Vladimir Putin",\n    "Joschka Fischer",\n    "Kofi Annan",\n    "Wolfgang Schäuble",\n    "Helmut Kohl",\n    "Fidel Castro",\n    "Queen Elisabeth II.",\n    "Helmut Schmidt",\n    "Konrad Adenauer",\n    "Otto von Bismarck",\n    "Sir Francis Drake",\n    "Hernan Cortes",\n    "Richard I. Löwenherz",\n    "Friedrich I. Barbarossa",\n    "Mario Götze",\n    "Thomas Müller",\n    "Sebastian Vettel",\n    "Manuel Neuer",\n    "Lionel Messi",\n    "Christiano Ronaldo",\n    "Bastian Schweinsteiger",\n    "Roger Federer",\n    "Dirk Nowitzki",\n    "Vladimir Klitschko",\n    "Tiger Woods",\n    "David Beckham",\n    "Steffi Graf",\n    "Boris Becker",\n    "Jürgen Klopp",\n    "Michael Schumacher",\n    "Katarina Witt",\n    "Henry Maske",\n    "Michael Jordan",\n    "Jogi Löw",\n    "Diego Maradona",\n    "Uli Hoeneß",\n    "Niki Lauda",\n    "Ottmar Hitzfeld",\n    "Berti Vogts",\n    "Gerd Müller",\n    "Franz Beckenbauer",\n    "Reinhold Messner",\n    "Muhammad Ali",\n    "Pélé",\n    "Uwe Seeler",\n    "Megan Fox",\n    "Liam Hemsworth",\n    "Emma Watson",\n    "Jennifer Lawrence",\n    "Scarlett Johannsson",\n    "Nora Tschirner",\n    "Matthias Schweighöfer",\n    "Daniel Brühl",\n    "Angelina Jolie",\n    "Leonardo DiCaprio",\n    "Will Smith",\n    "Daniel Craig",\n    "Julia Roberts",\n    "Anke Engelke",\n    "Brad Pitt",\n    "Til Schweiger",\n    "Tom Cruise",\n    "George Clooney",\n    "Tom Hanks",\n    "Johnny Depp",\n    "Bruce Willis",\n    "Jackie Chan",\n    "Otto Waalkes",\n    "Arnold Schwarzenegger",\n    "Steven Spielberg",\n    "Sylvester Stallone",\n    "Robert De Niro",\n    "Harrison Ford",\n    "Al Pacino",\n    "Terence Hill",\n    "Götz George",\n    "Jack Nicholson",\n    "Woody Allen",\n    "Brigitte Bardot",\n    "Sean Connery",\n    "Clint Eastwood",\n    "Bud Spencer",\n    "Jerry Lewis",\n    "Angela Landsbury",\n    "Doris Day",\n    "Kirk Douglas",\n    "Katy Perry",\n    "Helene Fischer",\n    "Andreas Bourani",\n    "David Garrett",\n    "Shakira",\n    "Robbie Williams",\n    "Eminem",\n    "Xavier Naidoo",\n    "Jennifer Lopez",\n    "Celine Dion",\n    "Campino",\n    "Bono",\n    "Nena",\n    "Madonna",\n    "Prince",\n    "Herbert Grönemeyer",\n    "Dieter Bohlen",\n    "Peter Maffay",\n    "Elton John",\n    "David Bowie",\n    "Mireille Mathieu",\n    "Udo Lindenberg",\n    "Rod Stewart",\n    "Mick Jagger",\n    "Paul McCartney",\n    "Bob Dylan",\n    "Ringo Starr",\n    "Tina Turner",\n    "Freddy Mercury",\n    "Giuseppe Verdi",\n    "Raffael",\n    "Albrecht Dürer",\n    "Sandro Botticelli",\n    "Tizian",\n    "Peter Paul Rubens",\n    "Jan Vermeer",\n    "Francisco de Goya",\n    "Madame Tussaud",\n    "Caspar David Friedrich",\n    "William Turner",\n    "Claude Monet",\n    "Edvard Munch",\n    "Wassily Kandinsky",\n    "Paul Klee",\n    "Coco Chanel",\n    "Joseph Beuys",\n    "Andy Warhol",\n    "Karl Lagerfeld",\n    "Giorgio Armani",\n    "Ralph Lauren",\n    "Calvin Klein",\n    "Wolfgang Joop",\n    "Tommy Hilfiger",\n    "Donatella Versace",\n    "Joanne K. Rowling",\n    "Dan Brown",\n    "Frank Schätzing",\n    "Michael Houellebecq",\n    "Ken Follett",\n    "Stephen King",\n    "Leonard Cohen",\n    "Umberto Eco",\n    "Günter Grass",\n    "Antoine de Saint-Exupéry",\n    "Erich Kästner",\n    "Bertholt Brecht",\n    "Franz Kafka",\n    "Thomas Mann",\n    "Theodor Fontane",\n    "Friedrich Schiller",\n    "Johann Wolfgang von Goethe",\n    "Gotthold Ephraim Lessing",\n    "Joko Winterscheidt",\n    "Judith Rakers",\n    "Carolin Kebekus",\n    "Kim Kardashian",\n    "Oliver Pocher",\n    "Barbara Schöneberger",\n    "Markus Lanz",\n    "Olaf Schubert",\n    "Stefan Raab",\n    "Sandra Maischberger",\n    "Anne Will",\n    "Johannes B. Kerner",\n    "Ranga Yogeshwar",\n    "Hella von Sinnen",\n    "Harald Schmidt",\n    "Harald Schmidt",\n    "Günther Jauch",\n    "Oprah Winfrey",\n    "Ilja Richter",\n    "Thomas Gottschalk",\n    "Hugo Egon Balder",\n    "Alice Schwarzer",\n    "Frank Elstner",\n    "Peter Lustig",\n    "Hugh Hefner",\n    "Rupert Murdoch",\n    "Alfred Biolek",\n    "Arthur Schopenhauer",\n    "Christoph Kolumbus",\n    "Ferdinand Magellan",\n    "Leonhard Euler",\n    "Anders Celsius",\n    "James Cook",\n    "Gottlieb Daimler",\n    "Nikola Tesla",\n    "Henry Ford",\n    "Lance Armstrong",\n    "Wernher von Braun",\n    "Konrad Zuse",\n    "Tim Berners-Lee",\n    "Steve Jobs",\n    "Steve Wozniak",\n    "Bill Gates",\n    "Robert Koch",\n    "Albert Schweitzer",\n    "Beate Uhse",\n    "John D. Rockefeller",\n    "Levi Strauss",\n    "Arthur Guinness",\n    "Dietmar Hopp",\n    "Michael Bloomberg",\n    "Josef Ackermann",\n    "Paul Allen",\n    "Elon Musk",\n    "Larry Page",\n    "Sergey Brin",\n    "Mark Shuttleworth",\n    "Johannes Paul II.",\n    "Al Capone",\n    "Kaspar Hauser",\n    "Billy the Kid",\n    "Buffalo Bill",\n    "Loki Schmidt",\n    "Oskar Schindler",\n    "Diana Spencer (Prinzessin Diana)",\n    "Adolf Hitler",\n    "Dwight D. Eisenhower",\n    "Charles de Gaule",\n    "Michail Gorbatschow",\n    "Jassir Arafat",\n    "Mark Zuckerberg",\n    "Bradley Cooper",\n    "Hugh Jackman",\n    "Matt Damon",\n    "Ben Affleck",\n    "Richard Gere",\n    "Harrison Ford",\n    "Patrick Swayze",\n    "Penélope Cruz",\n    "Scarlett Johansson",\n    "Mila Kunis",\n    "Rihanna",\n    "Kate Beckinsale",\n    "Halle Berry",\n    "Jessica Biel",\n\t"Josef Stalin"\n  ]\n}\n';});
+define('text',['module'], function (module) {
+    
+
+    var text, fs, Cc, Ci, xpcIsWindows,
+        progIds = ['Msxml2.XMLHTTP', 'Microsoft.XMLHTTP', 'Msxml2.XMLHTTP.4.0'],
+        xmlRegExp = /^\s*<\?xml(\s)+version=[\'\"](\d)*.(\d)*[\'\"](\s)*\?>/im,
+        bodyRegExp = /<body[^>]*>\s*([\s\S]+)\s*<\/body>/im,
+        hasLocation = typeof location !== 'undefined' && location.href,
+        defaultProtocol = hasLocation && location.protocol && location.protocol.replace(/\:/, ''),
+        defaultHostName = hasLocation && location.hostname,
+        defaultPort = hasLocation && (location.port || undefined),
+        buildMap = {},
+        masterConfig = (module.config && module.config()) || {};
+
+    text = {
+        version: '2.0.14',
+
+        strip: function (content) {
+            //Strips <?xml ...?> declarations so that external SVG and XML
+            //documents can be added to a document without worry. Also, if the string
+            //is an HTML document, only the part inside the body tag is returned.
+            if (content) {
+                content = content.replace(xmlRegExp, "");
+                var matches = content.match(bodyRegExp);
+                if (matches) {
+                    content = matches[1];
+                }
+            } else {
+                content = "";
+            }
+            return content;
+        },
+
+        jsEscape: function (content) {
+            return content.replace(/(['\\])/g, '\\$1')
+                .replace(/[\f]/g, "\\f")
+                .replace(/[\b]/g, "\\b")
+                .replace(/[\n]/g, "\\n")
+                .replace(/[\t]/g, "\\t")
+                .replace(/[\r]/g, "\\r")
+                .replace(/[\u2028]/g, "\\u2028")
+                .replace(/[\u2029]/g, "\\u2029");
+        },
+
+        createXhr: masterConfig.createXhr || function () {
+            //Would love to dump the ActiveX crap in here. Need IE 6 to die first.
+            var xhr, i, progId;
+            if (typeof XMLHttpRequest !== "undefined") {
+                return new XMLHttpRequest();
+            } else if (typeof ActiveXObject !== "undefined") {
+                for (i = 0; i < 3; i += 1) {
+                    progId = progIds[i];
+                    try {
+                        xhr = new ActiveXObject(progId);
+                    } catch (e) {}
+
+                    if (xhr) {
+                        progIds = [progId];  // so faster next time
+                        break;
+                    }
+                }
+            }
+
+            return xhr;
+        },
+
+        /**
+         * Parses a resource name into its component parts. Resource names
+         * look like: module/name.ext!strip, where the !strip part is
+         * optional.
+         * @param {String} name the resource name
+         * @returns {Object} with properties "moduleName", "ext" and "strip"
+         * where strip is a boolean.
+         */
+        parseName: function (name) {
+            var modName, ext, temp,
+                strip = false,
+                index = name.lastIndexOf("."),
+                isRelative = name.indexOf('./') === 0 ||
+                             name.indexOf('../') === 0;
+
+            if (index !== -1 && (!isRelative || index > 1)) {
+                modName = name.substring(0, index);
+                ext = name.substring(index + 1);
+            } else {
+                modName = name;
+            }
+
+            temp = ext || modName;
+            index = temp.indexOf("!");
+            if (index !== -1) {
+                //Pull off the strip arg.
+                strip = temp.substring(index + 1) === "strip";
+                temp = temp.substring(0, index);
+                if (ext) {
+                    ext = temp;
+                } else {
+                    modName = temp;
+                }
+            }
+
+            return {
+                moduleName: modName,
+                ext: ext,
+                strip: strip
+            };
+        },
+
+        xdRegExp: /^((\w+)\:)?\/\/([^\/\\]+)/,
+
+        /**
+         * Is an URL on another domain. Only works for browser use, returns
+         * false in non-browser environments. Only used to know if an
+         * optimized .js version of a text resource should be loaded
+         * instead.
+         * @param {String} url
+         * @returns Boolean
+         */
+        useXhr: function (url, protocol, hostname, port) {
+            var uProtocol, uHostName, uPort,
+                match = text.xdRegExp.exec(url);
+            if (!match) {
+                return true;
+            }
+            uProtocol = match[2];
+            uHostName = match[3];
+
+            uHostName = uHostName.split(':');
+            uPort = uHostName[1];
+            uHostName = uHostName[0];
+
+            return (!uProtocol || uProtocol === protocol) &&
+                   (!uHostName || uHostName.toLowerCase() === hostname.toLowerCase()) &&
+                   ((!uPort && !uHostName) || uPort === port);
+        },
+
+        finishLoad: function (name, strip, content, onLoad) {
+            content = strip ? text.strip(content) : content;
+            if (masterConfig.isBuild) {
+                buildMap[name] = content;
+            }
+            onLoad(content);
+        },
+
+        load: function (name, req, onLoad, config) {
+            //Name has format: some.module.filext!strip
+            //The strip part is optional.
+            //if strip is present, then that means only get the string contents
+            //inside a body tag in an HTML string. For XML/SVG content it means
+            //removing the <?xml ...?> declarations so the content can be inserted
+            //into the current doc without problems.
+
+            // Do not bother with the work if a build and text will
+            // not be inlined.
+            if (config && config.isBuild && !config.inlineText) {
+                onLoad();
+                return;
+            }
+
+            masterConfig.isBuild = config && config.isBuild;
+
+            var parsed = text.parseName(name),
+                nonStripName = parsed.moduleName +
+                    (parsed.ext ? '.' + parsed.ext : ''),
+                url = req.toUrl(nonStripName),
+                useXhr = (masterConfig.useXhr) ||
+                         text.useXhr;
+
+            // Do not load if it is an empty: url
+            if (url.indexOf('empty:') === 0) {
+                onLoad();
+                return;
+            }
+
+            //Load the text. Use XHR if possible and in a browser.
+            if (!hasLocation || useXhr(url, defaultProtocol, defaultHostName, defaultPort)) {
+                text.get(url, function (content) {
+                    text.finishLoad(name, parsed.strip, content, onLoad);
+                }, function (err) {
+                    if (onLoad.error) {
+                        onLoad.error(err);
+                    }
+                });
+            } else {
+                //Need to fetch the resource across domains. Assume
+                //the resource has been optimized into a JS module. Fetch
+                //by the module name + extension, but do not include the
+                //!strip part to avoid file system issues.
+                req([nonStripName], function (content) {
+                    text.finishLoad(parsed.moduleName + '.' + parsed.ext,
+                                    parsed.strip, content, onLoad);
+                });
+            }
+        },
+
+        write: function (pluginName, moduleName, write, config) {
+            if (buildMap.hasOwnProperty(moduleName)) {
+                var content = text.jsEscape(buildMap[moduleName]);
+                write.asModule(pluginName + "!" + moduleName,
+                               "define(function () { return '" +
+                                   content +
+                               "';});\n");
+            }
+        },
+
+        writeFile: function (pluginName, moduleName, req, write, config) {
+            var parsed = text.parseName(moduleName),
+                extPart = parsed.ext ? '.' + parsed.ext : '',
+                nonStripName = parsed.moduleName + extPart,
+                //Use a '.js' file name so that it indicates it is a
+                //script that can be loaded across domains.
+                fileName = req.toUrl(parsed.moduleName + extPart) + '.js';
+
+            //Leverage own load() method to load plugin value, but only
+            //write out values that do not have the strip argument,
+            //to avoid any potential issues with ! in file names.
+            text.load(nonStripName, req, function (value) {
+                //Use own write() method to construct full module value.
+                //But need to create shell that translates writeFile's
+                //write() to the right interface.
+                var textWrite = function (contents) {
+                    return write(fileName, contents);
+                };
+                textWrite.asModule = function (moduleName, contents) {
+                    return write.asModule(moduleName, fileName, contents);
+                };
+
+                text.write(pluginName, nonStripName, textWrite, config);
+            }, config);
+        }
+    };
+
+    if (masterConfig.env === 'node' || (!masterConfig.env &&
+            typeof process !== "undefined" &&
+            process.versions &&
+            !!process.versions.node &&
+            !process.versions['node-webkit'] &&
+            !process.versions['atom-shell'])) {
+        //Using special require.nodeRequire, something added by r.js.
+        fs = require.nodeRequire('fs');
+
+        text.get = function (url, callback, errback) {
+            try {
+                var file = fs.readFileSync(url, 'utf8');
+                //Remove BOM (Byte Mark Order) from utf8 files if it is there.
+                if (file[0] === '\uFEFF') {
+                    file = file.substring(1);
+                }
+                callback(file);
+            } catch (e) {
+                if (errback) {
+                    errback(e);
+                }
+            }
+        };
+    } else if (masterConfig.env === 'xhr' || (!masterConfig.env &&
+            text.createXhr())) {
+        text.get = function (url, callback, errback, headers) {
+            var xhr = text.createXhr(), header;
+            xhr.open('GET', url, true);
+
+            //Allow plugins direct access to xhr headers
+            if (headers) {
+                for (header in headers) {
+                    if (headers.hasOwnProperty(header)) {
+                        xhr.setRequestHeader(header.toLowerCase(), headers[header]);
+                    }
+                }
+            }
+
+            //Allow overrides specified in config
+            if (masterConfig.onXhr) {
+                masterConfig.onXhr(xhr, url);
+            }
+
+            xhr.onreadystatechange = function (evt) {
+                var status, err;
+                //Do not explicitly handle errors, those should be
+                //visible via console output in the browser.
+                if (xhr.readyState === 4) {
+                    status = xhr.status || 0;
+                    if (status > 399 && status < 600) {
+                        //An http 4xx or 5xx error. Signal an error.
+                        err = new Error(url + ' HTTP status: ' + status);
+                        err.xhr = xhr;
+                        if (errback) {
+                            errback(err);
+                        }
+                    } else {
+                        callback(xhr.responseText);
+                    }
+
+                    if (masterConfig.onXhrComplete) {
+                        masterConfig.onXhrComplete(xhr, url);
+                    }
+                }
+            };
+            xhr.send(null);
+        };
+    } else if (masterConfig.env === 'rhino' || (!masterConfig.env &&
+            typeof Packages !== 'undefined' && typeof java !== 'undefined')) {
+        //Why Java, why is this so awkward?
+        text.get = function (url, callback) {
+            var stringBuffer, line,
+                encoding = "utf-8",
+                file = new java.io.File(url),
+                lineSeparator = java.lang.System.getProperty("line.separator"),
+                input = new java.io.BufferedReader(new java.io.InputStreamReader(new java.io.FileInputStream(file), encoding)),
+                content = '';
+            try {
+                stringBuffer = new java.lang.StringBuffer();
+                line = input.readLine();
+
+                // Byte Order Mark (BOM) - The Unicode Standard, version 3.0, page 324
+                // http://www.unicode.org/faq/utf_bom.html
+
+                // Note that when we use utf-8, the BOM should appear as "EF BB BF", but it doesn't due to this bug in the JDK:
+                // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4508058
+                if (line && line.length() && line.charAt(0) === 0xfeff) {
+                    // Eat the BOM, since we've already found the encoding on this file,
+                    // and we plan to concatenating this buffer with others; the BOM should
+                    // only appear at the top of a file.
+                    line = line.substring(1);
+                }
+
+                if (line !== null) {
+                    stringBuffer.append(line);
+                }
+
+                while ((line = input.readLine()) !== null) {
+                    stringBuffer.append(lineSeparator);
+                    stringBuffer.append(line);
+                }
+                //Make sure we return a JavaScript string and not a Java string.
+                content = String(stringBuffer.toString()); //String
+            } finally {
+                input.close();
+            }
+            callback(content);
+        };
+    } else if (masterConfig.env === 'xpconnect' || (!masterConfig.env &&
+            typeof Components !== 'undefined' && Components.classes &&
+            Components.interfaces)) {
+        //Avert your gaze!
+        Cc = Components.classes;
+        Ci = Components.interfaces;
+        Components.utils['import']('resource://gre/modules/FileUtils.jsm');
+        xpcIsWindows = ('@mozilla.org/windows-registry-key;1' in Cc);
+
+        text.get = function (url, callback) {
+            var inStream, convertStream, fileObj,
+                readData = {};
+
+            if (xpcIsWindows) {
+                url = url.replace(/\//g, '\\');
+            }
+
+            fileObj = new FileUtils.File(url);
+
+            //XPCOM, you so crazy
+            try {
+                inStream = Cc['@mozilla.org/network/file-input-stream;1']
+                           .createInstance(Ci.nsIFileInputStream);
+                inStream.init(fileObj, 1, 0, false);
+
+                convertStream = Cc['@mozilla.org/intl/converter-input-stream;1']
+                                .createInstance(Ci.nsIConverterInputStream);
+                convertStream.init(inStream, "utf-8", inStream.available(),
+                Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
+
+                convertStream.readString(inStream.available(), readData);
+                convertStream.close();
+                inStream.close();
+                callback(readData.value);
+            } catch (e) {
+                throw new Error((fileObj && fileObj.path || '') + ': ' + e);
+            }
+        };
+    }
+    return text;
+});
+
+/** @license
+ * RequireJS plugin for loading JSON files
+ * - depends on Text plugin and it was HEAVILY "inspired" by it as well.
+ * Author: Miller Medeiros
+ * Version: 0.4.0 (2014/04/10)
+ * Released under the MIT license
+ */
+define('json',['text'], function(text){
+
+    var CACHE_BUST_QUERY_PARAM = 'bust',
+        CACHE_BUST_FLAG = '!bust',
+        jsonParse = (typeof JSON !== 'undefined' && typeof JSON.parse === 'function')? JSON.parse : function(val){
+            return eval('('+ val +')'); //quick and dirty
+        },
+        buildMap = {};
+
+    function cacheBust(url){
+        url = url.replace(CACHE_BUST_FLAG, '');
+        url += (url.indexOf('?') < 0)? '?' : '&';
+        return url + CACHE_BUST_QUERY_PARAM +'='+ Math.round(2147483647 * Math.random());
+    }
+
+    //API
+    return {
+
+        load : function(name, req, onLoad, config) {
+            if (( config.isBuild && (config.inlineJSON === false || name.indexOf(CACHE_BUST_QUERY_PARAM +'=') !== -1)) || (req.toUrl(name).indexOf('empty:') === 0)) {
+                //avoid inlining cache busted JSON or if inlineJSON:false
+                //and don't inline files marked as empty!
+                onLoad(null);
+            } else {
+                text.get(req.toUrl(name), function(data){
+                    var parsed;
+                    if (config.isBuild) {
+                        buildMap[name] = data;
+                        onLoad(data);
+                    } else {
+                        try {
+                            parsed = jsonParse(data);
+                        } catch (e) {
+                            onLoad.error(e);
+                        }
+                        onLoad(parsed);
+                    }
+                },
+                    onLoad.error, {
+                        accept: 'application/json'
+                    }
+                );
+            }
+        },
+
+        normalize : function (name, normalize) {
+            // used normalize to avoid caching references to a "cache busted" request
+            if (name.indexOf(CACHE_BUST_FLAG) !== -1) {
+                name = cacheBust(name);
+            }
+            // resolve any relative paths
+            return normalize(name);
+        },
+
+        //write method based on RequireJS official text plugin by James Burke
+        //https://github.com/jrburke/requirejs/blob/master/text.js
+        write : function(pluginName, moduleName, write){
+            if(moduleName in buildMap){
+                var content = buildMap[moduleName];
+                write('define("'+ pluginName +'!'+ moduleName +'", function(){ return '+ content +';});\n');
+            }
+        }
+
+    };
+});
+
+define("json!data/terms/movies.json", function(){ return {
+  "terms": [
+    "Die glorreichen Sieben",
+    "Matrix",
+    "Spiderman",
+    "Was sie schon immer über Sex wissen wollten und nie zu fragen gewagt haben...",
+    "Free Willy",
+    "Kevin - allein zu Haus",
+    "Ein Hund namens Beethoven",
+    "Snatch - Schweine und Diamanten",
+    "Aristocats",
+    "König der Löwen",
+    "Speed",
+    "...denn Sie wissen nicht, was Sie tun",
+    "Giganten",
+    "Inglorious Basterds",
+    "Pulp Fiction",
+    "Kill Bill",
+    "Reservoir Dogs",
+    "Django Unchained",
+    "Harry Potter",
+    "James Bond - Skyfall",
+    "James Bond - Spectre",
+    "James Bond - Man lebt nur zweimal",
+    "James Bond - Liebesgrüße aus Moskau",
+    "James Bond - Diamantenfieber",
+    "James Bond - Goldfinger",
+    "James Bond - Goldeneye",
+    "James Bond - Der Spion, der mich liebte",
+    "James Bond jagt Dr. No ",
+    "James Bond - Feuerball",
+    "James Bond - Im Geheimdienst ihrer Majestät",
+    "James Bond - Casino Royal",
+    "Iron Man",
+    "Thor",
+    "The Avengers",
+    "Der unglaubliche Hulk",
+    "Ziemlich beste Freunde",
+    "Bube, Dame, König, grAs",
+    "Sherlock Holmes",
+    "Superman",
+    "The Dark Knight",
+    "12 Monkeys",
+    "Ein Fisch namens Wanda",
+    "Das Leben des Brian",
+    "Erdbeben",
+    "Die nackte Kanone",
+    "The Fast and the Furious",
+    "Avatar - Aufbruch nach Pandora",
+    "Titanic",
+    "Jurassic Park",
+    "E.T. - Der Ausserirdische",
+    "Der Hobbit",
+    "Der Herr der Ringe",
+    "Transformers",
+    "Fluch der Karibik",
+    "Findet Nemo",
+    "Die Monster AG",
+    "Shrek - der tollkühne Held",
+    "Independence Day",
+    "Krieg der Sterne",
+    "Die Tribute von Panem",
+    "Das Sakrileg",
+    "Gravity",
+    "Mission: Impossible",
+    "Twilight",
+    "Planet der Affen",
+    "Forrest Gump",
+    "The Sixth Sense",
+    "Men In Black",
+    "Vom Winde verweht",
+    "Der weiße Hai",
+    "Ben Hur",
+    "2001 - Odyssee im Weltraum",
+    "Der Pate",
+    "Der Exorzist",
+    "Rocky",
+    "Rambo",
+    "Zurück in die Zukunft",
+    "Rain Man",
+    "Indiana Jones und der letzte Kreuzzug",
+    "Terminator",
+    "Stirb Langsam",
+    "Die unendliche Geschichte",
+    "Lethal Weapon",
+    "V wie Vendetta",
+    "Ratatouille",
+    "Pretty Woman",
+    "Schlaflos in Seattle",
+    "E-Mail für Dich",
+    "Der bewegte Mann",
+    "Der Schuh des Manitu",
+    "Good Bye, Lenin!",
+    "Crocodile Dundee",
+    "Der Name der Rose",
+    "Love Story",
+    "Platoon",
+    "Full Metal Jacket",
+    "Good Morning Vietnam",
+    "Der Soldat James Ryan",
+    "Schindler's Liste",
+    "Das Leben ist schön",
+    "Das dreckige Dutzend",
+    "Spartacus",
+    "Lawrence von Arabien",
+    "Das Dschungelbuch",
+    "Armageddon",
+    "The Wolf of Wall Street",
+    "50 Shades of Grey",
+    "The King's Speech",
+    "The Hangover",
+    "World War Z",
+    "Wolverine",
+    "Les Miserables",
+    "Life of Pi",
+    "Alien",
+    "Black Swan",
+    "Iron Sky - Wir kommen in Frieden",
+    "Die drei Musketiere",
+    "Robin Hood - König der Diebe",
+    "Der mit dem Wolf tanzt",
+    "The Social Network",
+    "American Pie",
+    "American Beauty",
+    "Fight Club",
+    "Slumdog Millionaire",
+    "Wall-E - der letzte räumt die Erde auf",
+    "Ocean's Eleven",
+    "Der Teufel trägt Prada",
+    "Brokeback Mountain",
+    "King Kong",
+    "Königreich der Himmel",
+    "Der Untergang",
+    "Schtonk!",
+    "Catch me if you can",
+    "3 Engel für Charlie",
+    "Sex and the City",
+    "Miss Undercover",
+    "Tomb Raider",
+    "Gladiator",
+    "Erin Brokovich",
+    "X-Men",
+    "Die Mumie",
+    "Notting Hill",
+    "Godzilla",
+    "Lola rennt",
+    "Spiel mir das Lied vom Tod",
+    "Singin' in the Rain",
+    "Tanz der Vampire",
+    "Thomas Crown ist nicht zu fassen",
+    "Magnolia",
+    "Wie ein wilder Stier",
+    "Der unsichtbare Dritte",
+    "Gangs of New York",
+    "Bonnie und Clyde",
+    "Einer flog über das Kuckucksnest",
+    "Die Katze auf dem heißen Blechdach",
+    "Underworld",
+    "Fahrenheit 451",
+    "Brazil",
+    "Tiger & Dragon",
+    "Lost Highway",
+    "Der letzte Tango in Paris",
+    "Jackie Brown",
+    "Lost in Translation",
+    "Der große Diktator",
+    "M. Eine Stadt sucht einen Mörder",
+    "Manhattan",
+    "L.A. Confidential",
+    "Arsen und Spitzenhäubchen",
+    "The Good, the Bad and the Ugly (Zwei glorreiche Halunken)",
+    "Fargo",
+    "Doktor Schiwago",
+    "Gefährliche Brandung",
+    "Wall Street",
+    "Shutter Island",
+    "The Beach",
+    "Aviator",
+    "Heat",
+    "Taxi Driver",
+    "Goodfellas",
+    "Es war einmal in Amerika",
+    "Mary Shelleys Frankenstein",
+    "Casino",
+    "Verrückt nach Mary",
+    "Zoolander",
+    "Reine Nervensache",
+    "Easy Rider",
+    "Shining",
+    "Wenn der Postmann zweimal klingelt",
+    "Mars Attacks!",
+    "Besser geht's nicht",
+    "Departed - Unter Feinden",
+    "Das Kartell",
+    "Die Stunde der Patrioten",
+    "Jagd auf Roter Oktober",
+    "Walt Disney's Fantasia",
+    "Schneewittchen",
+    "Alice im Wunderland",
+    "Der Zauberer von Oz",
+    "Das Leben der Anderen",
+    "Zweiohrküken",
+    "Die Fälscher",
+    "Die Welle",
+    "Keinohrhasen",
+    "Das Parfum",
+    "Knocking on Heaven's Door"
+  ]
+};});
+
+define("json!data/terms/persons.json", function(){ return {
+  "terms": [
+    "Aristoteles",
+    "Archimedes",
+    "Kopernikus",
+    "Galileo Galilei",
+    "Johannes Kepler",
+    "Blaise Pascal",
+    "Isaac Newton",
+    "Daniel Bernoulli",
+    "Max Planck",
+    "Marie Curie",
+    "Ernest Rutherford",
+    "Albert Einstein",
+    "Werner Heisenberg",
+    "Stephen Hawking",
+    "Mohammed",
+    "Karl der Große",
+    "Dschingis Khan",
+    "Marco Polo",
+    "Leonardo da Vinci",
+    "Johannes Gutenberg",
+    "Ludwig XIV.",
+    "William Shakespeare",
+    "Johann Sebastian Bach",
+    "Georg Friedrich Händel",
+    "Immanuel Kant",
+    "Benjamin Franklin",
+    "Voltaire",
+    "George Washington",
+    "Friedrich Schiller",
+    "Napoleon Bonaparte",
+    "Ludwig van Beethoven",
+    "Abraham Lincoln",
+    "Thomas Jefferson",
+    "Charles Darwin",
+    "Queen Victoria",
+    "Mark Twain",
+    "Jules Verne",
+    "Louis Pasteur",
+    "Leo Tolstoi",
+    "Friedrich Nietzsche",
+    "Peter Tschaikowski",
+    "Wilhelm Conrad Röntgen",
+    "Sigmund Freud",
+    "Vincent van Gogh",
+    "Thomas Alva Edison",
+    "Mahatma Gandhi",
+    "Lenin",
+    "Pablo Picasso",
+    "Winston Churchill",
+    "Charlie Chaplin",
+    "Ernest Hemingway",
+    "Louis Armstrong",
+    "Walt Disney",
+    "Astrid Lindgren",
+    "Mutter Teresa",
+    "Willy Brandt",
+    "Frank Sinatra",
+    "John F. Kennedy",
+    "Nelson Mandela",
+    "Sophie Scholl",
+    "Marilyn Monroe",
+    "Che Guevara",
+    "Martin Luther King",
+    "Anne Frank",
+    "Neil Armstrong",
+    "Elvis Presley",
+    "John Lennon",
+    "Bob Marley",
+    "Michael Jackson",
+    "Julian Assange",
+    "David Cameron",
+    "Barack Obama",
+    "George W. Bush",
+    "Ronald Reagon",
+    "Jimmy Carter",
+    "Richard Nixon",
+    "Francois Hollande",
+    "Angela Merkel",
+    "Vladimir Putin",
+    "Joschka Fischer",
+    "Kofi Annan",
+    "Wolfgang Schäuble",
+    "Helmut Kohl",
+    "Fidel Castro",
+    "Queen Elisabeth II.",
+    "Helmut Schmidt",
+    "Konrad Adenauer",
+    "Otto von Bismarck",
+    "Sir Francis Drake",
+    "Hernan Cortes",
+    "Richard I. Löwenherz",
+    "Friedrich I. Barbarossa",
+    "Mario Götze",
+    "Thomas Müller",
+    "Sebastian Vettel",
+    "Manuel Neuer",
+    "Lionel Messi",
+    "Christiano Ronaldo",
+    "Bastian Schweinsteiger",
+    "Roger Federer",
+    "Dirk Nowitzki",
+    "Vladimir Klitschko",
+    "Tiger Woods",
+    "David Beckham",
+    "Steffi Graf",
+    "Boris Becker",
+    "Jürgen Klopp",
+    "Michael Schumacher",
+    "Katarina Witt",
+    "Henry Maske",
+    "Michael Jordan",
+    "Jogi Löw",
+    "Diego Maradona",
+    "Uli Hoeneß",
+    "Niki Lauda",
+    "Ottmar Hitzfeld",
+    "Berti Vogts",
+    "Gerd Müller",
+    "Franz Beckenbauer",
+    "Reinhold Messner",
+    "Muhammad Ali",
+    "Pélé",
+    "Uwe Seeler",
+    "Megan Fox",
+    "Liam Hemsworth",
+    "Emma Watson",
+    "Jennifer Lawrence",
+    "Scarlett Johannsson",
+    "Nora Tschirner",
+    "Matthias Schweighöfer",
+    "Daniel Brühl",
+    "Angelina Jolie",
+    "Leonardo DiCaprio",
+    "Will Smith",
+    "Daniel Craig",
+    "Julia Roberts",
+    "Anke Engelke",
+    "Brad Pitt",
+    "Til Schweiger",
+    "Tom Cruise",
+    "George Clooney",
+    "Tom Hanks",
+    "Johnny Depp",
+    "Bruce Willis",
+    "Jackie Chan",
+    "Otto Waalkes",
+    "Arnold Schwarzenegger",
+    "Steven Spielberg",
+    "Sylvester Stallone",
+    "Robert De Niro",
+    "Harrison Ford",
+    "Al Pacino",
+    "Terence Hill",
+    "Götz George",
+    "Jack Nicholson",
+    "Woody Allen",
+    "Brigitte Bardot",
+    "Sean Connery",
+    "Clint Eastwood",
+    "Bud Spencer",
+    "Jerry Lewis",
+    "Angela Landsbury",
+    "Doris Day",
+    "Kirk Douglas",
+    "Katy Perry",
+    "Helene Fischer",
+    "Andreas Bourani",
+    "David Garrett",
+    "Shakira",
+    "Robbie Williams",
+    "Eminem",
+    "Xavier Naidoo",
+    "Jennifer Lopez",
+    "Celine Dion",
+    "Campino",
+    "Bono",
+    "Nena",
+    "Madonna",
+    "Prince",
+    "Herbert Grönemeyer",
+    "Dieter Bohlen",
+    "Peter Maffay",
+    "Elton John",
+    "David Bowie",
+    "Mireille Mathieu",
+    "Udo Lindenberg",
+    "Rod Stewart",
+    "Mick Jagger",
+    "Paul McCartney",
+    "Bob Dylan",
+    "Ringo Starr",
+    "Tina Turner",
+    "Freddy Mercury",
+    "Giuseppe Verdi",
+    "Raffael",
+    "Albrecht Dürer",
+    "Sandro Botticelli",
+    "Tizian",
+    "Peter Paul Rubens",
+    "Jan Vermeer",
+    "Francisco de Goya",
+    "Madame Tussaud",
+    "Caspar David Friedrich",
+    "William Turner",
+    "Claude Monet",
+    "Edvard Munch",
+    "Wassily Kandinsky",
+    "Paul Klee",
+    "Coco Chanel",
+    "Joseph Beuys",
+    "Andy Warhol",
+    "Karl Lagerfeld",
+    "Giorgio Armani",
+    "Ralph Lauren",
+    "Calvin Klein",
+    "Wolfgang Joop",
+    "Tommy Hilfiger",
+    "Donatella Versace",
+    "Joanne K. Rowling",
+    "Dan Brown",
+    "Frank Schätzing",
+    "Michael Houellebecq",
+    "Ken Follett",
+    "Stephen King",
+    "Leonard Cohen",
+    "Umberto Eco",
+    "Günter Grass",
+    "Antoine de Saint-Exupéry",
+    "Erich Kästner",
+    "Bertholt Brecht",
+    "Franz Kafka",
+    "Thomas Mann",
+    "Theodor Fontane",
+    "Friedrich Schiller",
+    "Johann Wolfgang von Goethe",
+    "Gotthold Ephraim Lessing",
+    "Joko Winterscheidt",
+    "Judith Rakers",
+    "Carolin Kebekus",
+    "Kim Kardashian",
+    "Oliver Pocher",
+    "Barbara Schöneberger",
+    "Markus Lanz",
+    "Olaf Schubert",
+    "Stefan Raab",
+    "Sandra Maischberger",
+    "Anne Will",
+    "Johannes B. Kerner",
+    "Ranga Yogeshwar",
+    "Hella von Sinnen",
+    "Harald Schmidt",
+    "Harald Schmidt",
+    "Günther Jauch",
+    "Oprah Winfrey",
+    "Ilja Richter",
+    "Thomas Gottschalk",
+    "Hugo Egon Balder",
+    "Alice Schwarzer",
+    "Frank Elstner",
+    "Peter Lustig",
+    "Hugh Hefner",
+    "Rupert Murdoch",
+    "Alfred Biolek",
+    "Arthur Schopenhauer",
+    "Christoph Kolumbus",
+    "Ferdinand Magellan",
+    "Leonhard Euler",
+    "Anders Celsius",
+    "James Cook",
+    "Gottlieb Daimler",
+    "Nikola Tesla",
+    "Henry Ford",
+    "Lance Armstrong",
+    "Wernher von Braun",
+    "Konrad Zuse",
+    "Tim Berners-Lee",
+    "Steve Jobs",
+    "Steve Wozniak",
+    "Bill Gates",
+    "Robert Koch",
+    "Albert Schweitzer",
+    "Beate Uhse",
+    "John D. Rockefeller",
+    "Levi Strauss",
+    "Arthur Guinness",
+    "Dietmar Hopp",
+    "Michael Bloomberg",
+    "Josef Ackermann",
+    "Paul Allen",
+    "Elon Musk",
+    "Larry Page",
+    "Sergey Brin",
+    "Mark Shuttleworth",
+    "Johannes Paul II.",
+    "Al Capone",
+    "Kaspar Hauser",
+    "Billy the Kid",
+    "Buffalo Bill",
+    "Loki Schmidt",
+    "Oskar Schindler",
+    "Diana Spencer (Prinzessin Diana)",
+    "Adolf Hitler",
+    "Dwight D. Eisenhower",
+    "Charles de Gaule",
+    "Michail Gorbatschow",
+    "Jassir Arafat",
+    "Mark Zuckerberg",
+    "Bradley Cooper",
+    "Hugh Jackman",
+    "Matt Damon",
+    "Ben Affleck",
+    "Richard Gere",
+    "Harrison Ford",
+    "Patrick Swayze",
+    "Penélope Cruz",
+    "Scarlett Johansson",
+    "Mila Kunis",
+    "Rihanna",
+    "Kate Beckinsale",
+    "Halle Berry",
+    "Jessica Biel",
+	"Josef Stalin"
+  ]
+}
+;});
 
 /*! howler.js v2.0.0-beta5 | (c) 2013-2015, James Simpson of GoldFire Studios | MIT License | howlerjs.com */
 !function(){function e(){try{"undefined"!=typeof AudioContext?n=new AudioContext:"undefined"!=typeof webkitAudioContext?n=new webkitAudioContext:o=!1}catch(e){o=!1}if(!o)if("undefined"!=typeof Audio)try{var u=new Audio;"undefined"==typeof u.oncanplaythrough&&(d="canplay")}catch(e){t=!0}else t=!0;try{var u=new Audio;u.muted&&(t=!0)}catch(e){}o&&(r="undefined"==typeof n.createGain?n.createGainNode():n.createGain(),r.gain.value=1,r.connect(n.destination))}var n=null,o=!0,t=!1,r=null,d="canplaythrough";e();var u=function(){this.init()};u.prototype={init:function(){var e=this||i;return e._codecs={},e._howls=[],e._muted=!1,e._volume=1,e.state="running",e.autoSuspend=!0,e._autoSuspend(),e.mobileAutoEnable=!0,e.noAudio=t,e.usingWebAudio=o,e.ctx=n,t||e._setupCodecs(),e},volume:function(e){var n=this||i;if(e=parseFloat(e),"undefined"!=typeof e&&e>=0&&1>=e){n._volume=e,o&&(r.gain.value=e);for(var t=0;t<n._howls.length;t++)if(!n._howls[t]._webAudio)for(var d=n._howls[t]._getSoundIds(),u=0;u<d.length;u++){var a=n._howls[t]._soundById(d[u]);a&&a._node&&(a._node.volume=a._volume*e)}return n}return n._volume},mute:function(e){var n=this||i;n._muted=e,o&&(r.gain.value=e?0:n._volume);for(var t=0;t<n._howls.length;t++)if(!n._howls[t]._webAudio)for(var d=n._howls[t]._getSoundIds(),u=0;u<d.length;u++){var a=n._howls[t]._soundById(d[u]);a&&a._node&&(a._node.muted=e?!0:a._muted)}return n},unload:function(){for(var o=this||i,t=o._howls.length-1;t>=0;t--)o._howls[t].unload();return o.usingWebAudio&&"undefined"!=typeof n.close&&(o.ctx=null,n.close(),e(),o.ctx=n),o},codecs:function(e){return(this||i)._codecs[e]},_setupCodecs:function(){var e=this||i,n=new Audio,o=n.canPlayType("audio/mpeg;").replace(/^no$/,""),t=/OPR\//.test(navigator.userAgent);return e._codecs={mp3:!(t||!o&&!n.canPlayType("audio/mp3;").replace(/^no$/,"")),mpeg:!!o,opus:!!n.canPlayType('audio/ogg; codecs="opus"').replace(/^no$/,""),ogg:!!n.canPlayType('audio/ogg; codecs="vorbis"').replace(/^no$/,""),wav:!!n.canPlayType('audio/wav; codecs="1"').replace(/^no$/,""),aac:!!n.canPlayType("audio/aac;").replace(/^no$/,""),m4a:!!(n.canPlayType("audio/x-m4a;")||n.canPlayType("audio/m4a;")||n.canPlayType("audio/aac;")).replace(/^no$/,""),mp4:!!(n.canPlayType("audio/x-mp4;")||n.canPlayType("audio/mp4;")||n.canPlayType("audio/aac;")).replace(/^no$/,""),weba:!!n.canPlayType('audio/webm; codecs="vorbis"').replace(/^no$/,""),webm:!!n.canPlayType('audio/webm; codecs="vorbis"').replace(/^no$/,"")},e},_enableMobileAudio:function(){var e=this||i,o=/iPhone|iPad|iPod|Android|BlackBerry|BB10|Silk/i.test(navigator.userAgent),t=!!("ontouchend"in window||navigator.maxTouchPoints>0||navigator.msMaxTouchPoints>0);if(!n||!e._mobileEnabled&&o&&t){e._mobileEnabled=!1;var r=function(){var o=n.createBuffer(1,1,22050),t=n.createBufferSource();t.buffer=o,t.connect(n.destination),"undefined"==typeof t.start?t.noteOn(0):t.start(0),t.onended=function(){t.disconnect(0),e._mobileEnabled=!0,e.mobileAutoEnable=!1,document.removeEventListener("touchend",r,!0)}};return document.addEventListener("touchend",r,!0),e}},_autoSuspend:function(){var e=this;if(e.autoSuspend&&n&&"undefined"!=typeof n.suspend&&o){for(var t=0;t<e._howls.length;t++)if(e._howls[t]._webAudio)for(var r=0;r<e._howls[t]._sounds.length;r++)if(!e._howls[t]._sounds[r]._paused)return e;return e._suspendTimer=setTimeout(function(){e.autoSuspend&&(e._suspendTimer=null,e.state="suspending",n.suspend().then(function(){e.state="suspended",e._resumeAfterSuspend&&(delete e._resumeAfterSuspend,e._autoResume())}))},3e4),e}},_autoResume:function(){var e=this;if(n&&"undefined"!=typeof n.resume&&o)return"running"===e.state&&e._suspendTimer?(clearTimeout(e._suspendTimer),e._suspendTimer=null):"suspended"===e.state?(e.state="resuming",n.resume().then(function(){e.state="running"})):"suspending"===e.state&&(e._resumeAfterSuspend=!0),e}};var i=new u,a=function(e){var n=this;return e.src&&0!==e.src.length?void n.init(e):void console.error("An array of source files must be passed with any new Howl.")};a.prototype={init:function(e){var t=this;return t._autoplay=e.autoplay||!1,t._ext=e.ext||null,t._html5=e.html5||!1,t._muted=e.mute||!1,t._loop=e.loop||!1,t._pool=e.pool||5,t._preload="boolean"==typeof e.preload?e.preload:!0,t._rate=e.rate||1,t._sprite=e.sprite||{},t._src="string"!=typeof e.src?e.src:[e.src],t._volume=void 0!==e.volume?e.volume:1,t._duration=0,t._loaded=!1,t._sounds=[],t._endTimers={},t._onend=e.onend?[{fn:e.onend}]:[],t._onfaded=e.onfaded?[{fn:e.onfaded}]:[],t._onload=e.onload?[{fn:e.onload}]:[],t._onloaderror=e.onloaderror?[{fn:e.onloaderror}]:[],t._onpause=e.onpause?[{fn:e.onpause}]:[],t._onplay=e.onplay?[{fn:e.onplay}]:[],t._onstop=e.onstop?[{fn:e.onstop}]:[],t._webAudio=o&&!t._html5,"undefined"!=typeof n&&n&&i.mobileAutoEnable&&i._enableMobileAudio(),i._howls.push(t),t._preload&&t.load(),t},load:function(){var e=this,n=null;if(t)return void e._emit("loaderror",null,"No audio support.");"string"==typeof e._src&&(e._src=[e._src]);for(var o=0;o<e._src.length;o++){var r,d;if(e._ext&&e._ext[o]?r=e._ext[o]:(d=e._src[o],r=/^data:audio\/([^;,]+);/i.exec(d),r||(r=/\.([^.]+)$/.exec(d.split("?",1)[0])),r&&(r=r[1].toLowerCase())),i.codecs(r)){n=e._src[o];break}}return n?(e._src=n,"https:"===window.location.protocol&&"http:"===n.slice(0,5)&&(e._html5=!0,e._webAudio=!1),new _(e),e._webAudio&&l(e),e):void e._emit("loaderror",null,"No codec support for selected audio sources.")},play:function(e){var o=this,t=arguments,r=null;if("number"==typeof e)r=e,e=null;else if("undefined"==typeof e){e="__default";for(var u=0,a=0;a<o._sounds.length;a++)o._sounds[a]._paused&&!o._sounds[a]._ended&&(u++,r=o._sounds[a]._id);1===u?e=null:r=null}var _=r?o._soundById(r):o._inactiveSound();if(!_)return null;if(r&&!e&&(e=_._sprite||"__default"),!o._loaded&&!o._sprite[e])return o.once("load",function(){o.play(o._soundById(_._id)?_._id:void 0)}),_._id;if(r&&!_._paused)return _._id;o._webAudio&&i._autoResume();var s=_._seek>0?_._seek:o._sprite[e][0]/1e3,l=(o._sprite[e][0]+o._sprite[e][1])/1e3-s,f=1e3*l/Math.abs(_._rate);f!==1/0&&(o._endTimers[_._id]=setTimeout(o._ended.bind(o,_),f)),_._paused=!1,_._ended=!1,_._sprite=e,_._seek=s,_._start=o._sprite[e][0]/1e3,_._stop=(o._sprite[e][0]+o._sprite[e][1])/1e3,_._loop=!(!_._loop&&!o._sprite[e][2]);var c=_._node;if(o._webAudio){var p=function(){o._refreshBuffer(_);var e=_._muted||o._muted?0:_._volume*i.volume();c.gain.setValueAtTime(e,n.currentTime),_._playStart=n.currentTime,"undefined"==typeof c.bufferSource.start?_._loop?c.bufferSource.noteGrainOn(0,s,86400):c.bufferSource.noteGrainOn(0,s,l):_._loop?c.bufferSource.start(0,s,86400):c.bufferSource.start(0,s,l),o._endTimers[_._id]||f===1/0||(o._endTimers[_._id]=setTimeout(o._ended.bind(o,_),f)),t[1]||setTimeout(function(){o._emit("play",_._id)},0)};o._loaded?p():(o.once("load",p),o._clearTimer(_._id))}else{var m=function(){c.currentTime=s,c.muted=_._muted||o._muted||i._muted||c.muted,c.volume=_._volume*i.volume(),c.playbackRate=_._rate,setTimeout(function(){c.play(),t[1]||o._emit("play",_._id)},0)};if(4===c.readyState||!c.readyState&&navigator.isCocoonJS)m();else{var v=function(){f!==1/0&&(o._endTimers[_._id]=setTimeout(o._ended.bind(o,_),f)),m(),c.removeEventListener(d,v,!1)};c.addEventListener(d,v,!1),o._clearTimer(_._id)}}return _._id},pause:function(e){var n=this;if(!n._loaded)return n.once("play",function(){n.pause(e)}),n;for(var o=n._getSoundIds(e),t=0;t<o.length;t++){n._clearTimer(o[t]);var r=n._soundById(o[t]);if(r&&!r._paused){if(r._seek=n.seek(o[t]),r._paused=!0,n._stopFade(o[t]),r._node)if(n._webAudio){if(!r._node.bufferSource)return n;"undefined"==typeof r._node.bufferSource.stop?r._node.bufferSource.noteOff(0):r._node.bufferSource.stop(0),r._node.bufferSource=null}else isNaN(r._node.duration)&&r._node.duration!==1/0||r._node.pause();arguments[1]||n._emit("pause",r._id)}}return n},stop:function(e){var n=this;if(!n._loaded)return"undefined"!=typeof n._sounds[0]._sprite&&n.once("play",function(){n.stop(e)}),n;for(var o=n._getSoundIds(e),t=0;t<o.length;t++){n._clearTimer(o[t]);var r=n._soundById(o[t]);if(r&&!r._paused){if(r._seek=r._start||0,r._paused=!0,r._ended=!0,n._stopFade(o[t]),r._node)if(n._webAudio){if(!r._node.bufferSource)return n;"undefined"==typeof r._node.bufferSource.stop?r._node.bufferSource.noteOff(0):r._node.bufferSource.stop(0),r._node.bufferSource=null}else isNaN(r._node.duration)&&r._node.duration!==1/0||(r._node.pause(),r._node.currentTime=r._start||0);n._emit("stop",r._id)}}return n},mute:function(e,o){var t=this;if(!t._loaded)return t.once("play",function(){t.mute(e,o)}),t;if("undefined"==typeof o){if("boolean"!=typeof e)return t._muted;t._muted=e}for(var r=t._getSoundIds(o),d=0;d<r.length;d++){var u=t._soundById(r[d]);u&&(u._muted=e,t._webAudio&&u._node?u._node.gain.setValueAtTime(e?0:u._volume*i.volume(),n.currentTime):u._node&&(u._node.muted=i._muted?!0:e))}return t},volume:function(){var e,o,t=this,r=arguments;if(0===r.length)return t._volume;if(1===r.length){var d=t._getSoundIds(),u=d.indexOf(r[0]);u>=0?o=parseInt(r[0],10):e=parseFloat(r[0])}else r.length>=2&&(e=parseFloat(r[0]),o=parseInt(r[1],10));var a;if(!("undefined"!=typeof e&&e>=0&&1>=e))return a=o?t._soundById(o):t._sounds[0],a?a._volume:0;if(!t._loaded)return t.once("play",function(){t.volume.apply(t,r)}),t;"undefined"==typeof o&&(t._volume=e),o=t._getSoundIds(o);for(var _=0;_<o.length;_++)a=t._soundById(o[_]),a&&(a._volume=e,r[2]||t._stopFade(o[_]),t._webAudio&&a._node&&!a._muted?a._node.gain.setValueAtTime(e*i.volume(),n.currentTime):a._node&&!a._muted&&(a._node.volume=e*i.volume()));return t},fade:function(e,o,t,r){var d=this;if(!d._loaded)return d.once("play",function(){d.fade(e,o,t,r)}),d;d.volume(e,r);for(var u=d._getSoundIds(r),i=0;i<u.length;i++){var a=d._soundById(u[i]);if(a)if(d._webAudio&&!a._muted){var _=n.currentTime,s=_+t/1e3;a._volume=e,a._node.gain.setValueAtTime(e,_),a._node.gain.linearRampToValueAtTime(o,s),a._timeout=setTimeout(function(e,t){delete t._timeout,setTimeout(function(){t._volume=o,d._emit("faded",e)},s-n.currentTime>0?Math.ceil(1e3*(s-n.currentTime)):0)}.bind(d,u[i],a),t)}else{var l=Math.abs(e-o),f=e>o?"out":"in",c=l/.01,p=t/c;!function(){var n=e;a._interval=setInterval(function(e,t){n+="in"===f?.01:-.01,n=Math.max(0,n),n=Math.min(1,n),n=Math.round(100*n)/100,d.volume(n,e,!0),n===o&&(clearInterval(t._interval),delete t._interval,d._emit("faded",e))}.bind(d,u[i],a),p)}()}}return d},_stopFade:function(e){var o=this,t=o._soundById(e);return t._interval?(clearInterval(t._interval),delete t._interval,o._emit("faded",e)):t._timeout&&(clearTimeout(t._timeout),delete t._timeout,t._node.gain.cancelScheduledValues(n.currentTime),o._emit("faded",e)),o},loop:function(){var e,n,o,t=this,r=arguments;if(0===r.length)return t._loop;if(1===r.length){if("boolean"!=typeof r[0])return o=t._soundById(parseInt(r[0],10)),o?o._loop:!1;e=r[0],t._loop=e}else 2===r.length&&(e=r[0],n=parseInt(r[1],10));for(var d=t._getSoundIds(n),u=0;u<d.length;u++)o=t._soundById(d[u]),o&&(o._loop=e,t._webAudio&&o._node&&o._node.bufferSource&&(o._node.bufferSource.loop=e));return t},rate:function(){var e,n,o=this,t=arguments;if(0===t.length)n=o._sounds[0]._id;else if(1===t.length){var r=o._getSoundIds(),d=r.indexOf(t[0]);d>=0?n=parseInt(t[0],10):e=parseFloat(t[0])}else 2===t.length&&(e=parseFloat(t[0]),n=parseInt(t[1],10));var u;if("number"!=typeof e)return u=o._soundById(n),u?u._rate:o._rate;if(!o._loaded)return o.once("load",function(){o.rate.apply(o,t)}),o;"undefined"==typeof n&&(o._rate=e),n=o._getSoundIds(n);for(var i=0;i<n.length;i++)if(u=o._soundById(n[i])){u._rate=e,o._webAudio&&u._node&&u._node.bufferSource?u._node.bufferSource.playbackRate.value=e:u._node&&(u._node.playbackRate=e);var a=o.seek(n[i]),_=(o._sprite[u._sprite][0]+o._sprite[u._sprite][1])/1e3-a,s=1e3*_/Math.abs(u._rate);o._clearTimer(n[i]),o._endTimers[n[i]]=setTimeout(o._ended.bind(o,u),s)}return o},seek:function(){var e,o,t=this,r=arguments;if(0===r.length)o=t._sounds[0]._id;else if(1===r.length){var d=t._getSoundIds(),u=d.indexOf(r[0]);u>=0?o=parseInt(r[0],10):(o=t._sounds[0]._id,e=parseFloat(r[0]))}else 2===r.length&&(e=parseFloat(r[0]),o=parseInt(r[1],10));if("undefined"==typeof o)return t;if(!t._loaded)return t.once("load",function(){t.seek.apply(t,r)}),t;var i=t._soundById(o);if(i){if(!(e>=0))return t._webAudio?i._seek+(t.playing(o)?n.currentTime-i._playStart:0):i._node.currentTime;var a=t.playing(o);a&&t.pause(o,!0),i._seek=e,t._clearTimer(o),a&&t.play(o,!0)}return t},playing:function(e){var n=this,o=n._soundById(e)||n._sounds[0];return o?!o._paused:!1},duration:function(){return this._duration},unload:function(){for(var e=this,n=e._sounds,o=0;o<n.length;o++){n[o]._paused||(e.stop(n[o]._id),e._emit("end",n[o]._id)),e._webAudio||(n[o]._node.src="",n[o]._node.removeEventListener("error",n[o]._errorFn,!1),n[o]._node.removeEventListener(d,n[o]._loadFn,!1)),delete n[o]._node,e._clearTimer(n[o]._id);var t=i._howls.indexOf(e);t>=0&&i._howls.splice(t,1)}return s&&delete s[e._src],e._sounds=[],e=null,null},on:function(e,n,o,t){var r=this,d=r["_on"+e];return"function"==typeof n&&d.push(t?{id:o,fn:n,once:t}:{id:o,fn:n}),r},off:function(e,n,o){var t=this,r=t["_on"+e];if(n){for(var d=0;d<r.length;d++)if(n===r[d].fn&&o===r[d].id){r.splice(d,1);break}}else if(e)t["_on"+e]=[];else for(var u=Object.keys(t),d=0;d<u.length;d++)0===u[d].indexOf("_on")&&Array.isArray(t[u[d]])&&(t[u[d]]=[]);return t},once:function(e,n,o){var t=this;return t.on(e,n,o,1),t},_emit:function(e,n,o){for(var t=this,r=t["_on"+e],d=0;d<r.length;d++)r[d].id&&r[d].id!==n||(setTimeout(function(e){e.call(this,n,o)}.bind(t,r[d].fn),0),r[d].once&&t.off(e,r[d].fn,r[d].id));return t},_ended:function(e){var o=this,t=e._sprite,r=!(!e._loop&&!o._sprite[t][2]);if(o._emit("end",e._id),!o._webAudio&&r&&o.stop(e._id).play(e._id),o._webAudio&&r){o._emit("play",e._id),e._seek=e._start||0,e._playStart=n.currentTime;var d=1e3*(e._stop-e._start)/Math.abs(e._rate);o._endTimers[e._id]=setTimeout(o._ended.bind(o,e),d)}return o._webAudio&&!r&&(e._paused=!0,e._ended=!0,e._seek=e._start||0,o._clearTimer(e._id),e._node.bufferSource=null,i._autoSuspend()),o._webAudio||r||o.stop(e._id),o},_clearTimer:function(e){var n=this;return n._endTimers[e]&&(clearTimeout(n._endTimers[e]),delete n._endTimers[e]),n},_soundById:function(e){for(var n=this,o=0;o<n._sounds.length;o++)if(e===n._sounds[o]._id)return n._sounds[o];return null},_inactiveSound:function(){var e=this;e._drain();for(var n=0;n<e._sounds.length;n++)if(e._sounds[n]._ended)return e._sounds[n].reset();return new _(e)},_drain:function(){var e=this,n=e._pool,o=0,t=0;if(!(e._sounds.length<n)){for(t=0;t<e._sounds.length;t++)e._sounds[t]._ended&&o++;for(t=e._sounds.length-1;t>=0;t--){if(n>=o)return;e._sounds[t]._ended&&(e._webAudio&&e._sounds[t]._node&&e._sounds[t]._node.disconnect(0),e._sounds.splice(t,1),o--)}}},_getSoundIds:function(e){var n=this;if("undefined"==typeof e){for(var o=[],t=0;t<n._sounds.length;t++)o.push(n._sounds[t]._id);return o}return[e]},_refreshBuffer:function(e){var o=this;return e._node.bufferSource=n.createBufferSource(),e._node.bufferSource.buffer=s[o._src],e._node.bufferSource.connect(e._panner?e._panner:e._node),e._node.bufferSource.loop=e._loop,e._loop&&(e._node.bufferSource.loopStart=e._start||0,e._node.bufferSource.loopEnd=e._stop),e._node.bufferSource.playbackRate.value=o._rate,o}};var _=function(e){this._parent=e,this.init()};if(_.prototype={init:function(){var e=this,n=e._parent;return e._muted=n._muted,e._loop=n._loop,e._volume=n._volume,e._muted=n._muted,e._rate=n._rate,e._seek=0,e._paused=!0,e._ended=!0,e._sprite="__default",e._id=Math.round(Date.now()*Math.random()),n._sounds.push(e),e.create(),e},create:function(){var e=this,o=e._parent,t=i._muted||e._muted||e._parent._muted?0:e._volume*i.volume();return o._webAudio?(e._node="undefined"==typeof n.createGain?n.createGainNode():n.createGain(),e._node.gain.setValueAtTime(t,n.currentTime),e._node.paused=!0,e._node.connect(r)):(e._node=new Audio,e._errorFn=e._errorListener.bind(e),e._node.addEventListener("error",e._errorFn,!1),e._loadFn=e._loadListener.bind(e),e._node.addEventListener(d,e._loadFn,!1),e._node.src=o._src,e._node.preload="auto",e._node.volume=t,e._node.load()),e},reset:function(){var e=this,n=e._parent;return e._muted=n._muted,e._loop=n._loop,e._volume=n._volume,e._muted=n._muted,e._rate=n._rate,e._seek=0,e._paused=!0,e._ended=!0,e._sprite="__default",e._id=Math.round(Date.now()*Math.random()),e},_errorListener:function(){var e=this;e._node.error&&4===e._node.error.code&&(i.noAudio=!0),e._parent._emit("loaderror",e._id,e._node.error?e._node.error.code:0),e._node.removeEventListener("error",e._errorListener,!1)},_loadListener:function(){var e=this,n=e._parent;n._duration=Math.ceil(10*e._node.duration)/10,0===Object.keys(n._sprite).length&&(n._sprite={__default:[0,1e3*n._duration]}),n._loaded||(n._loaded=!0,n._emit("load")),n._autoplay&&n.play(),e._node.removeEventListener(d,e._loadFn,!1)}},o)var s={},l=function(e){var n=e._src;if(s[n])return e._duration=s[n].duration,void p(e);if(/^data:[^;]+;base64,/.test(n)){window.atob=window.atob||function(e){for(var n,o,t="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",r=String(e).replace(/=+$/,""),d=0,u=0,i="";o=r.charAt(u++);~o&&(n=d%4?64*n+o:o,d++%4)?i+=String.fromCharCode(255&n>>(-2*d&6)):0)o=t.indexOf(o);return i};for(var o=atob(n.split(",")[1]),t=new Uint8Array(o.length),r=0;r<o.length;++r)t[r]=o.charCodeAt(r);c(t.buffer,e)}else{var d=new XMLHttpRequest;d.open("GET",n,!0),d.responseType="arraybuffer",d.onload=function(){c(d.response,e)},d.onerror=function(){e._webAudio&&(e._html5=!0,e._webAudio=!1,e._sounds=[],delete s[n],e.load())},f(d)}},f=function(e){try{e.send()}catch(n){e.onerror()}},c=function(e,o){n.decodeAudioData(e,function(e){e&&o._sounds.length>0&&(s[o._src]=e,p(o,e))},function(){o._emit("loaderror",null,"Decoding audio data failed.")})},p=function(e,n){n&&!e._duration&&(e._duration=n.duration),0===Object.keys(e._sprite).length&&(e._sprite={__default:[0,1e3*e._duration]}),e._loaded||(e._loaded=!0,e._emit("load")),e._autoplay&&e.play()};"function"==typeof define&&define.amd&&define('howler',[],function(){return{Howler:i,Howl:a}}),"undefined"!=typeof exports&&(exports.Howler=i,exports.Howl=a),"undefined"!=typeof window&&(window.HowlerGlobal=u,window.Howler=i,window.Howl=a,window.Sound=_)}();
@@ -3705,17 +3815,31 @@ define('text!data/terms/persons.json',[],function () { return '{\n  "terms": [\n
 !function(){HowlerGlobal.prototype.init=function(e){return function(){var n=this;return n._pos=[0,0,0],n._orientation=[0,0,-1,0,1,0],n._velocity=[0,0,0],n._listenerAttr={dopplerFactor:1,speedOfSound:343.3},e.call(this,o)}}(HowlerGlobal.prototype.init),HowlerGlobal.prototype.pos=function(e,n,t){var o=this;return o.ctx&&o.ctx.listener?(n="number"!=typeof n?o._pos[1]:n,t="number"!=typeof t?o._pos[2]:t,"number"!=typeof e?o._pos:(o._pos=[e,n,t],o.ctx.listener.setPosition(o._pos[0],o._pos[1],o._pos[2]),o)):o},HowlerGlobal.prototype.orientation=function(e,n,t,o,r,i){var a=this;if(!a.ctx||!a.ctx.listener)return a;var p=a._orientation;return n="number"!=typeof n?p[1]:n,t="number"!=typeof t?p[2]:t,o="number"!=typeof o?p[3]:o,r="number"!=typeof r?p[4]:r,i="number"!=typeof i?p[5]:i,"number"!=typeof e?p:(a._orientation=[e,n,t,o,r,i],a.ctx.listener.setOrientation(p[0],p[1],p[2],p[3],p[4],p[5]),a)},HowlerGlobal.prototype.velocity=function(e,n,t){var o=this;return o.ctx&&o.ctx.listener?(n="number"!=typeof n?o._velocity[1]:n,t="number"!=typeof t?o._velocity[2]:t,"number"!=typeof e?o._velocity:(o._velocity=[e,n,t],o.ctx.listener.setVelocity(o._velocity[0],o._velocity[1],o._velocity[2]),o)):o},HowlerGlobal.prototype.listenerAttr=function(e){var n=this;if(!n.ctx||!n.ctx.listener)return n;var t=n._listenerAttr;return e?(n._listenerAttr={dopplerFactor:"undefined"!=typeof e.dopplerFactor?e.dopplerFactor:t.dopplerFactor,speedOfSound:"undefined"!=typeof e.speedOfSound?e.speedOfSound:t.speedOfSound},n.ctx.listener.dopplerFactor=t.dopplerFactor,n.ctx.listener.speedOfSound=t.speedOfSound,n):t},Howl.prototype.init=function(e){return function(n){var t=this;return t._orientation=n.orientation||[1,0,0],t._pos=n.pos||null,t._velocity=n.velocity||[0,0,0],t._pannerAttr={coneInnerAngle:"undefined"!=typeof n.coneInnerAngle?n.coneInnerAngle:360,coneOUterAngle:"undefined"!=typeof n.coneOUterAngle?n.coneOUterAngle:360,coneOuterGain:"undefined"!=typeof n.coneOuterGain?n.coneOuterGain:0,distanceModel:"undefined"!=typeof n.distanceModel?n.distanceModel:"inverse",maxDistance:"undefined"!=typeof n.maxDistance?n.maxDistance:1e4,panningModel:"undefined"!=typeof n.panningModel?n.panningModel:"HRTF",refDistance:"undefined"!=typeof n.refDistance?n.refDistance:1,rolloffFactor:"undefined"!=typeof n.rolloffFactor?n.rolloffFactor:1},e.call(this,n)}}(Howl.prototype.init),Howl.prototype.pos=function(n,t,o,r){var i=this;if(!i._webAudio)return i;if(!i._loaded)return i.once("play",function(){i.pos(n,t,o,r)}),i;if(t="number"!=typeof t?0:t,o="number"!=typeof o?-.5:o,"undefined"==typeof r){if("number"!=typeof n)return i._pos;i._pos=[n,t,o]}for(var a=i._getSoundIds(r),p=0;p<a.length;p++){var l=i._soundById(a[p]);if(l){if("number"!=typeof n)return l._pos;l._pos=[n,t,o],l._node&&(l._panner||e(l),l._panner.setPosition(n,t,o))}}return i},Howl.prototype.orientation=function(n,t,o,r){var i=this;if(!i._webAudio)return i;if(!i._loaded)return i.once("play",function(){i.orientation(n,t,o,r)}),i;if(t="number"!=typeof t?i._orientation[1]:t,o="number"!=typeof o?i._orientation[1]:o,"undefined"==typeof r){if("number"!=typeof n)return i._orientation;i._orientation=[n,t,o]}for(var a=i._getSoundIds(r),p=0;p<a.length;p++){var l=i._soundById(a[p]);if(l){if("number"!=typeof n)return l._orientation;l._orientation=[n,t,o],l._node&&(l._panner||e(l),l._panner.setOrientation(n,t,o))}}return i},Howl.prototype.velocity=function(n,t,o,r){var i=this;if(!i._webAudio)return i;if(!i._loaded)return i.once("play",function(){i.velocity(n,t,o,r)}),i;if(t="number"!=typeof t?i._velocity[1]:t,o="number"!=typeof o?i._velocity[1]:o,"undefined"==typeof r){if("number"!=typeof n)return i._velocity;i._velocity=[n,t,o]}for(var a=i._getSoundIds(r),p=0;p<a.length;p++){var l=i._soundById(a[p]);if(l){if("number"!=typeof n)return l._velocity;l._velocity=[n,t,o],l._node&&(l._panner||e(l),l._panner.setVelocity(n,t,o))}}return i},Howl.prototype.pannerAttr=function(){var n,t,o,r=this,i=arguments;if(!r._webAudio)return r;if(0===i.length)return r._pannerAttr;if(1===i.length){if("object"!=typeof i[0])return o=r._soundById(parseInt(i[0],10)),o?o._pannerAttr:r._pannerAttr;n=i[0],"undefined"==typeof t&&(r._pannerAttr={coneInnerAngle:"undefined"!=typeof n.coneInnerAngle?n.coneInnerAngle:r._coneInnerAngle,coneOUterAngle:"undefined"!=typeof n.coneOUterAngle?n.coneOUterAngle:r._coneOUterAngle,coneOuterGain:"undefined"!=typeof n.coneOuterGain?n.coneOuterGain:r._coneOuterGain,distanceModel:"undefined"!=typeof n.distanceModel?n.distanceModel:r._distanceModel,maxDistance:"undefined"!=typeof n.maxDistance?n.maxDistance:r._maxDistance,panningModel:"undefined"!=typeof n.panningModel?n.panningModel:r._panningModel,refDistance:"undefined"!=typeof n.refDistance?n.refDistance:r._refDistance,rolloffFactor:"undefined"!=typeof n.rolloffFactor?n.rolloffFactor:r._rolloffFactor})}else 2===i.length&&(n=i[0],t=parseInt(i[1],10));for(var a=r._getSoundIds(t),p=0;p<a.length;p++)if(o=r._soundById(a[p])){var l=o._pannerAttr;l={coneInnerAngle:"undefined"!=typeof n.coneInnerAngle?n.coneInnerAngle:l.coneInnerAngle,coneOUterAngle:"undefined"!=typeof n.coneOUterAngle?n.coneOUterAngle:l.coneOUterAngle,coneOuterGain:"undefined"!=typeof n.coneOuterGain?n.coneOuterGain:l.coneOuterGain,distanceModel:"undefined"!=typeof n.distanceModel?n.distanceModel:l.distanceModel,maxDistance:"undefined"!=typeof n.maxDistance?n.maxDistance:l.maxDistance,panningModel:"undefined"!=typeof n.panningModel?n.panningModel:l.panningModel,refDistance:"undefined"!=typeof n.refDistance?n.refDistance:l.refDistance,rolloffFactor:"undefined"!=typeof n.rolloffFactor?n.rolloffFactor:l.rolloffFactor};var c=o._panner;c?(c.coneInnerAngle=l.coneInnerAngle,c.coneOUterAngle=l.coneOUterAngle,c.coneOuterGain=l.coneOuterGain,c.distanceModel=l.distanceModel,c.maxDistance=l.maxDistance,c.panningModel=l.panningModel,c.refDistance=l.refDistance,c.rolloffFactor=l.rolloffFactor):(o._pos||(o._pos=r._pos||[0,0,-.5]),e(o))}return r},Sound.prototype.init=function(e){return function(){var n=this,t=n._parent;n._orientation=t._orientation,n._pos=t._pos,n._velocity=t._velocity,n._pannerAttr=t._pannerAttr,e.call(this),n._pos&&t.pos(n._pos[0],n._pos[1],n._pos[2],n._id)}}(Sound.prototype.init),Sound.prototype.reset=function(e){return function(){var n=this,t=n._parent;return n._orientation=t._orientation,n._pos=t._pos,n._velocity=t._velocity,n._pannerAttr=t._pannerAttr,e.call(this)}}(Sound.prototype.reset);var e=function(e){e._panner=Howler.ctx.createPanner(),e._panner.coneInnerAngle=e._pannerAttr.coneInnerAngle,e._panner.coneOUterAngle=e._pannerAttr.coneOUterAngle,e._panner.coneOuterGain=e._pannerAttr.coneOuterGain,e._panner.distanceModel=e._pannerAttr.distanceModel,e._panner.maxDistance=e._pannerAttr.maxDistance,e._panner.panningModel=e._pannerAttr.panningModel,e._panner.refDistance=e._pannerAttr.refDistance,e._panner.rolloffFactor=e._pannerAttr.rolloffFactor,e._panner.setPosition(e._pos[0],e._pos[1],e._pos[2]),e._panner.setOrientation(e._orientation[0],e._orientation[1],e._orientation[2]),e._panner.setVelocity(e._velocity[0],e._velocity[1],e._velocity[2]),e._panner.connect(e._node),e._paused||e._parent.pause(e._id).play(e._id)}}();
 
 
+define('db/termmanager', [
+	'json!data/terms/movies.json'
+	,'json!data/terms/persons.json'
+], function (movies, persons)
+{
+	var manager = {};
+	console.log(arguments);
+
+	// console.log('manager', manager);
+	return manager;
+});
+
+
+
 define('main', [
 	'jquery'
 	,'bongo'
 	,'bootstrap'
-	,'json'
 	,'nosleep'
-	,'text!data/terms/movies.json'
-	,'text!data/terms/persons.json'
+	,'json!data/terms/movies.json'
+	,'json!data/terms/persons.json'
 	,'howler'
+	,'db/termmanager'
 	// ,'text!tpl/contents.html'
-], function ($, bongo, bootstrap, json, NoSleep, movies, persons, howler) {
+], function ($, bongo, bootstrap, NoSleep, movies, persons, howler, termmanager) {
 	var game = $('div.game'),
 		round = 1,
 		team = 'a',
@@ -3756,8 +3880,6 @@ define('main', [
 		}),
 		roundStack;
 
-	movies = json.parse(movies);
-	persons = json.parse(persons);
 	terms = movies;
 
 	function startTurn() {

@@ -1,7 +1,7 @@
 'use strict';
 
 require.config({
-	baseUrl: 'js/app',
+	baseUrl: 'js',
 	//,paths: {
 	//	tpl: '../tpl'
 	//	//tinymce: '../deps/bower-tinymce-amd/tinyMCE',

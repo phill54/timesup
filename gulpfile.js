@@ -26,7 +26,6 @@ var gulp = require('gulp-help')(require('gulp')),
 			css: '../deps/requirejs-css/css',
 			requireLib: '../deps/almond/almond',
 			bootstrap: '../deps/bootstrap/dist/js/bootstrap',
-			json: '../deps/json2-bower/json2',
 			tpl: '../tpl/',
 			data:'../../data/',
 			normalize: '../deps/requirejs-css/normalize',
@@ -34,6 +33,7 @@ var gulp = require('gulp-help')(require('gulp')),
 			howler: '../deps/howler/howler.min',
 			bongo: '../deps/bongo/dist/bongo.min',
 			nosleep: '../deps/nosleep/NoSleep.min',
+			json: '../deps/requirejs-plugins/src/json'
         },
         inlineText: true,
         shim: {
@@ -53,12 +53,9 @@ var gulp = require('gulp-help')(require('gulp')),
                     // 'css!../deps/bootstrap/dist/css/bootstrap-theme.css'
                 ],
                 "exports": "$.fn.popover"
-            },
-            "json": {
-                exports: 'JSON'
             }
         },
-        deps: ["requireLib", "text", "../config.dist"],
+        deps: ["requireLib", "../config.dist"],
         enforceDefine: true
     };
 

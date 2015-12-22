@@ -4,13 +4,13 @@ define('main', [
 	'jquery'
 	,'bongo'
 	,'bootstrap'
-	,'json'
 	,'nosleep'
-	,'text!data/terms/movies.json'
-	,'text!data/terms/persons.json'
+	,'json!data/terms/movies.json'
+	,'json!data/terms/persons.json'
 	,'howler'
+	,'db/termmanager'
 	// ,'text!tpl/contents.html'
-], function ($, bongo, bootstrap, json, NoSleep, movies, persons, howler) {
+], function ($, bongo, bootstrap, NoSleep, movies, persons, howler, termmanager) {
 	var game = $('div.game'),
 		round = 1,
 		team = 'a',
@@ -51,8 +51,6 @@ define('main', [
 		}),
 		roundStack;
 
-	movies = json.parse(movies);
-	persons = json.parse(persons);
 	terms = movies;
 
 	function startTurn() {
