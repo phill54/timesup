@@ -3821,8 +3821,7 @@ define('db/termmanager', [
 ], function (movies, persons)
 {
 	var manager = {};
-	console.log(arguments);
-
+	// console.log(arguments);
 	// console.log('manager', manager);
 	return manager;
 });
