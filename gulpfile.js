@@ -33,7 +33,8 @@ var gulp = require('gulp-help')(require('gulp')),
 			howler: '../deps/howler/howler.min',
 			bongo: '../deps/bongo/dist/bongo.min',
 			nosleep: '../deps/nosleep/NoSleep.min',
-			json: '../deps/requirejs-plugins/src/json'
+			json: '../deps/requirejs-plugins/src/json',
+			hbs: '../deps/handlebars/hbs'
         },
         inlineText: true,
         shim: {
@@ -55,9 +56,14 @@ var gulp = require('gulp-help')(require('gulp')),
                 "exports": "$.fn.popover"
             }
         },
-        deps: ["requireLib", "../config.dist"],
-        enforceDefine: true
-    };
+		// hbs: {
+		// 	helpers: true,            // default: true
+		// 	templateExtension: 'hbs', // default: 'hbs'
+		// 	partialsUrl: ''           // default: ''
+		// },
+		deps: ["requireLib", "../config.dist"]
+		// enforceDefine: true
+	};
 
 /**
  * helper function recursive delete

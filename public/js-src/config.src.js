@@ -18,11 +18,13 @@ require.config({
         // font: '../deps/requirejs-plugins/font',
         // goog: '../deps/requirejs-plugins/goog',
         // image: '../deps/requirejs-plugins/image',
-        json: '../deps/requirejs-plugins/src/json'
+        json: '../deps/requirejs-plugins/src/json',
         // noext: '../deps/requirejs-plugins/noext',
         // mdown: '../deps/requirejs-plugins/lib/require/mdown',
         // propertyParser : '../deps/requirejs-plugins/lib/propertyParser',
-        // markdownConverter : '../deps/requirejs-plugins/lib/Markdown.Converter'
+        // markdownConverter : '../deps/requirejs-plugins/lib/Markdown.Converter',
+		/* end of require-js-plugins */
+		hbs: '../deps/handlebars/hbs'
 	},
 	shim: {
 		"jquery": {
@@ -43,6 +45,11 @@ require.config({
 			"exports": "$.fn.popover"
 		}
 	},
-	deps: ['main'],
-	enforceDefine: true
+	// hbs: {
+	// 	helpers: true,            // default: true
+	// 	templateExtension: 'hbs', // default: 'hbs'
+	// 	partialsUrl: ''           // default: ''
+	// },
+	deps: ['main']
+	// ,enforceDefine: true
 });

@@ -13,7 +13,8 @@
     "promise-js": "promise-js#0.0.5",
     "howler": "https://github.com/goldfire/howler.js.git#v2.0.0-beta5",
 	"bongo": "https://github.com/aaronshaf/bongo.js.git#master",
-	"nosleep": "https://github.com/richtr/NoSleep.js.git#master"
+	"nosleep": "https://github.com/richtr/NoSleep.js.git#master",
+	"handlebars": "https://github.com/SlexAxton/require-handlebars-plugin.git#master"
   },
   "homepage": "www.patrickhill.de/timesup/"
 }

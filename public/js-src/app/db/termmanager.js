@@ -3,10 +3,11 @@
 define('db/termmanager', [
 	'json!data/terms/movies.json'
 	,'json!data/terms/persons.json'
-], function (movies, persons)
+	,'hbs!tpl/menu'
+], function (movies, persons, menu)
 {
 	var manager = {};
-	// console.log(arguments);
+	console.log(menu);
 	// console.log('manager', manager);
 	return manager;
 });
