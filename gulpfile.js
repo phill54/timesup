@@ -21,18 +21,18 @@ var gulp = require('gulp-help')(require('gulp')),
     rjsConfig = {
         baseUrl: config.srcPath + 'app/',
         paths: {
-            jquery: '../deps/jquery/dist/jquery.min',
-            text: '../deps/requirejs-text/text',
-            css: '../deps/requirejs-css/css',
-            requireLib: '../deps/almond/almond',
-            bootstrap: '../deps/bootstrap/dist/js/bootstrap',
-            webix: '../deps/webix/codebase/webix_debug',
-            json: '../deps/json2-bower/json2',
-            tpl: '../tpl/',
-            data:'../../data/',
-            normalize: '../deps/requirejs-css/normalize',
-            'css-builder': '../deps/requirejs-css/css-builder',
-            howler: '../deps/howler/howler.min'
+			jquery: '../deps/jquery/dist/jquery.min',
+			text: '../deps/requirejs-text/text',
+			css: '../deps/requirejs-css/css',
+			requireLib: '../deps/almond/almond',
+			bootstrap: '../deps/bootstrap/dist/js/bootstrap',
+			json: '../deps/json2-bower/json2',
+			tpl: '../tpl/',
+			data:'../../data/',
+			normalize: '../deps/requirejs-css/normalize',
+			'css-builder': '../deps/requirejs-css/css-builder',
+			howler: '../deps/howler/howler.min',
+			bongo: '../deps/bongo/dist/bongo.min'
         },
         inlineText: true,
         shim: {
@@ -118,9 +118,10 @@ gulp.task('buildmaster', 'builds js for master layout', [
 
     return rjs(extend(true, {}, rjsConfig, {
         include: includes,
+		insertRequire: includes,
         out: 'app.js'
     }))
-		.pipe(uglify()).on('error', gutil.log)
+		// .pipe(uglify()).on('error', gutil.log)
 		.pipe(gulp.dest(config.destPath));
 
 });

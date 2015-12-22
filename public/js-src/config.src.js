@@ -8,11 +8,11 @@ require.config({
 		css: '../deps/requirejs-css/css',
 		requireLib: '../deps/requirejs/require',
 		bootstrap: '../deps/bootstrap/dist/js/bootstrap',
-		webix: '../deps/webix/codebase/webix_debug',
 		json: '../deps/json2-bower/json2',
 		tpl: '../tpl/',
 		data:'../../data/',
-		howler: '../deps/howler/howler.min'
+		howler: '../deps/howler/howler.min',
+		bongo: '../deps/bongo/dist/bongo.min'
 	},
 	shim: {
 		"jquery": {
@@ -33,5 +33,6 @@ require.config({
 			exports: 'JSON'
 		}
 	},
+	deps: ['main'],
 	enforceDefine: true
 });

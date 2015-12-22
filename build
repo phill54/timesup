@@ -1,4 +1,4 @@
 #!/bin/bash
 ./node_modules/.bin/gulp
 ./node_modules/.bin/gulp manifest
-./node_modules/.bin/gulp deploy
+#./node_modules/.bin/gulp deploy

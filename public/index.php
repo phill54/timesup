@@ -21,13 +21,10 @@ $build = isset($_GET['debug']) ? false : true;
 	<?php if ($build) { ?>
 		<link href="css/main.css" rel="stylesheet">
 		<script src="js/app.js"></script>
-		<script>
-			require(['main'], function () {});
-		</script>
 	<?php } else { ?>
 		<link rel="stylesheet/less" type="text/css" href="css/main.less" />
 		<script src="js-src/deps/less/dist/less.js" type="text/javascript"></script>
-		<script src="js-src/deps/requirejs/require.js" data-main="main"></script>
+		<script src="js-src/deps/requirejs/require.js"></script>
 		<script src="js-src/config.src.js"></script>
 	<?php } ?>
 

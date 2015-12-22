@@ -2,13 +2,14 @@
 
 define('main', [
     'jquery'
+	,'bongo'
     ,'bootstrap'
     ,'json'
     ,'text!data/terms/movies.json'
     ,'text!data/terms/persons.json'
     ,'howler'
     // ,'text!tpl/contents.html'
-], function ($, bootstrap, json, movies, persons, howler) {
+], function ($, bongo, bootstrap, json, movies, persons, howler) {
 
     var game = $('div.game'),
         round = 1,
@@ -255,4 +256,51 @@ define('main', [
     //scorePrevTermBtn.on('click', onScorePrevTerm);
     setTermsMoviesBtn.on('click', setTermsMovies);
     setTermsPersonsBtn.on('click', setTermsPersons);
+
+	if (bongo.supported) {
+		var db = bongo.db({
+			name: 'timesup',
+			objectStores: ['terms']
+		});
+		db.terms.insert({
+			term: 'Fantasia',
+			counter: 0
+		}, function (error, id) {
+			if (!error) {
+				console.log('id', id);
+				// db.collection('terms').save({
+				// 	_id: id,
+				// 	term: 'Fantasia2',
+				// 	counter: 1
+				// });
+				/*, function (error, id) {
+					if (!error) {
+						console.log('saved again', id);
+					} else {
+						console.error(error);
+					}
+				}*/
+			} else {
+				console.error(error);
+			}
+		});
+		setTimeout(function () {
+			db.terms.find(function (error, data) {
+				if (error) {
+					console.error(error);
+					return;
+				}
+				console.log(data);
+			});
+			console.log(
+				db.terms
+			);
+		}, 2000);
+
+		console.log('database', db);
+		// var db = bongo.db({
+		// 	name: 'timesup',
+		// 	collections: ['terms']
+		// });
+	}
 });
