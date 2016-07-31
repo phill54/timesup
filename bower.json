@@ -4,17 +4,23 @@
   "dependencies": {
     "requirejs": "requirejs#master",
     "requirejs-text": "https://github.com/requirejs/text.git#master",
-    "requirejs-css": "require-css#master",
-	"requirejs-plugins": "requirejs-plugins#master",
+    "requirejs-plugins": "requirejs-plugins#master",
     "less": "less#master",
     "jquery": "jquery#2.1.2",
-    "bootstrap": "https://github.com/twbs/bootstrap.git#3.3.1",
     "almond": "almond#master",
     "promise-js": "promise-js#0.0.5",
     "howler": "https://github.com/goldfire/howler.js.git#v2.0.0-beta5",
-	"bongo": "https://github.com/aaronshaf/bongo.js.git#master",
-	"nosleep": "https://github.com/richtr/NoSleep.js.git#master",
-	"handlebars": "https://github.com/SlexAxton/require-handlebars-plugin.git#master"
+    "bongo": "https://github.com/aaronshaf/bongo.js.git#master",
+    "nosleep": "https://github.com/richtr/NoSleep.js.git#master",
+    "handlebars": "https://github.com/SlexAxton/require-handlebars-plugin.git#master",
+    "jquery-mobile": "jquery-mobile-bower#master"
   },
-  "homepage": "www.patrickhill.de/timesup/"
+  "homepage": "www.patrickhill.de/timesup/",
+  "inactive": {
+    "bootstrap": "https://github.com/twbs/bootstrap.git#3.3.1",
+    "requirejs-css": "require-css#master"
+  },
+  "resolutions": {
+    "jquery": "2.1.2"
+  }
 }

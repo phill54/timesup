@@ -1,0 +1,87 @@
+<nav class="navbar navbar-inverse navbar-fixed-top">
+	<div class="container">
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			<a class="navbar-brand" href="#">Time's up</a>
+		</div>
+		<div id="navbar" class="collapse navbar-collapse">
+			<ul class="nav navbar-nav">
+<!--				<li><a action="newGame">neues Spiel</a></li>-->
+<!--				<li><a action="scorePrevTerm">letzten Begriff werten</a></li>-->
+				<li><a action="setTermsPersons">neues Spiel (Personen)</a></li>
+				<li><a action="setTermsMovies">neues Spiel (Filme)</a></li>
+				<li><a action="fixScore">Spielstand korrigieren</a></li>
+<!--				<li><a href="#about">About</a></li>-->
+<!--				<li><a href="#contact">Contact</a></li>-->
+			</ul>
+		</div><!--/.nav-collapse -->
+	</div>
+</nav>
+
+<div class="container game">
+	<div class="card">
+		<h3 class="info">
+			<span class="round">1</span>
+			<span class="badge">40</span>
+			<span class="team">Team A</span>
+		</h3>
+		<h1 class="term">STARTE SPIEL</h1>
+		<p class="timer">&nbsp;</p>
+	</div>
+	<div class="col-md-6 scores">
+		<table class="table table-striped">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Team A</th>
+					<th>Team B</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>1</td>
+					<td class="score round-1 team-a">0</td>
+					<td class="score round-1 team-b">0</td>
+				</tr>
+				<tr>
+					<td>2</td>
+					<td class="score round-2 team-a">0</td>
+					<td class="score round-2 team-b">0</td>
+				</tr>
+				<tr>
+					<td>3</td>
+					<td class="score round-3 team-a">0</td>
+					<td class="score round-3 team-b">0</td>
+				</tr>
+				<tr>
+					<td>&nbsp;</td>
+					<td class="score total team-a">0</td>
+					<td class="score total team-b">0</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+</div><!-- /.container -->
+
+
+<div class="container terms">
+	Die letzten Begriffe korrigieren
+</div>
+
+<nav class="navbar navbar-inverse navbar-fixed-bottom">
+	<div class="container">
+		<div class="navbar-header game">
+			<button type="button" class="btn btn-lg btn-primary" action="startTimer">Start</button>
+			<button type="button" class="btn btn-lg btn-success" action="nextCard" disabled>Richtig</button>
+<!--			<button type="button" class="btn btn-lg btn-warning" action="correct" disabled>Korrigieren</button>-->
+		</div>
+		<div class="navbar-header terms">
+			<button type="button" class="btn btn-lg btn-primary" action="backToGame">Zurück</button>
+		</div>
+	</div>
+</nav>

@@ -4,6 +4,7 @@ require.config({
 	baseUrl: '/js-src/app',
 	paths: {
 		jquery: '../deps/jquery/dist/jquery.min',
+		"jquery.mobile": '../deps/jquery-mobile/js/jquery.mobile-1.4.5.min',
 		text: '../deps/requirejs-text/text',
 		css: '../deps/requirejs-css/css',
 		requireLib: '../deps/requirejs/require',
@@ -29,6 +30,12 @@ require.config({
 	shim: {
 		"jquery": {
 			"exports": "jQuery"
+		},
+		"jquery.mobile": {
+			"depends": [
+				"jquery:$"
+			],
+			"exports": "$.mobile"
 		},
 		"css": {
 			"deps": ['text']

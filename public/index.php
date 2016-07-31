@@ -17,7 +17,11 @@ $build = isset($_GET['debug']) ? false : true;
 
 	<title>Time's up</title>
 
-
+	<?php
+	echo "<h1>";
+	var_dump($build);
+	echo "</h1>";
+	?>
 	<?php if ($build) { ?>
 		<link href="css/main.css" rel="stylesheet">
 		<script src="js/app.js"></script>
@@ -30,96 +34,153 @@ $build = isset($_GET['debug']) ? false : true;
 
 </head>
 
-<body>
-
-<nav class="navbar navbar-inverse navbar-fixed-top">
-	<div class="container">
-		<div class="navbar-header">
-			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-				<span class="sr-only">Toggle navigation</span>
-				<span class="icon-bar"></span>
-				<span class="icon-bar"></span>
-				<span class="icon-bar"></span>
-			</button>
-			<a class="navbar-brand" href="#">Time's up</a>
+<body class="container">
+	<div data-role="page" id="game">
+		<div data-role="header" data-position="fixed" data-theme="b">
+			<h1>Time's up</h1>
+			<a href="#options" data-transition="flip" class="ui-btn-right ui-btn ui-btn-inline ui-mini ui-corner-all ui-btn-icon-right ui-icon-bars">Optionen</a>
 		</div>
-		<div id="navbar" class="collapse navbar-collapse">
-			<ul class="nav navbar-nav">
-<!--				<li><a action="newGame">neues Spiel</a></li>-->
-<!--				<li><a action="scorePrevTerm">letzten Begriff werten</a></li>-->
-				<li><a action="setTermsPersons">neues Spiel (Personen)</a></li>
-				<li><a action="setTermsMovies">neues Spiel (Filme)</a></li>
-				<li><a action="fixScore">Spielstand korrigieren</a></li>
-<!--				<li><a href="#about">About</a></li>-->
-<!--				<li><a href="#contact">Contact</a></li>-->
+
+		<div data-role="content">
+			<div class="card">
+				<h3 class="info">
+					<span class="round">Runde 1</span>
+					<span class="badge">40</span>
+					<span class="team">Team A</span>
+				</h3>
+				<h1 class="term">STARTE SPIEL</h1>
+				<p class="timer">30</p>
+			</div>
+
+
+			<table class="table-stripe" style="width: 100%;">
+                <thead>
+                  <tr class="ui-bar-d">
+                    <th>Runde</th>
+                    <th data-priority="1">Team A</th>
+                    <th data-priority="2">Team B</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th>1</th>
+                    <td>0</td>
+                    <td>0</td>
+                  </tr>
+                  <tr>
+                    <th>2</th>
+                    <td>0</td>
+                    <td>0</td>
+                  </tr>
+                  <tr>
+                    <th>3</th>
+                    <td>0</td>
+                    <td>0</td>
+                  </tr>
+                  <tr>
+                    <th>&nbsp;</th>
+                    <td>0</td>
+                    <td>0</td>
+                  </tr>
+                </tbody>
+              </table>
+		</div>
+
+		<div data-role="footer" data-position="fixed" data-theme="b" style="text-align: center;">
+				<button class="ui-btn ui-corner-all ui-btn-icon-right ui-icon-carat-r" style="background-color: #0073e6; font-size: 1em;">Start</button>
+				<button class="ui-btn ui-corner-all ui-btn-icon-right ui-icon-check" style="background-color: #009900; font-size: 1em;" disabled>Richtig</button>
+			</div>
+		</div>
+
+	</div>
+
+	<div data-role="page" id="options">
+		<div data-role="header" data-position="fixed" data-theme="b">
+			<h1>Optionen</h1>
+			<a href="#game"  data-transition="flip" class="ui-btn ui-btn-inline ui-corner-all ui-btn-icon-notext ui-icon-home"></a>
+		</div>
+
+		<div data-role="content">
+			<ul data-role="listview" data-divider-theme="b">
+				<li data-role="list-divider">Sammlung spielen</li>
+				<li><a href="#game" data-transition="flip">Filme</a></li>
+				<li><a href="#game" data-transition="flip">Personen</a></li>
+				<li data-role="list-divider">Sammlung bearbeiten</li>
+				<li><a href="#edit" data-transition="flip">Filme</a></li>
+				<li><a href="#edit" data-transition="flip">Personen</a></li>
+				<li data-role="list-divider">Einstellungen</li>
+				<li><a href="#newcollection" data-transition="flip">neue Sammlung</a></li>
+				<li><a href="#resetcollection" data-transition="flip">Statistik zurücksetzen</a></li>
 			</ul>
-		</div><!--/.nav-collapse -->
-	</div>
-</nav>
-
-<div class="container game">
-
-	<div class="card">
-		<h3 class="info">
-			<span class="round">&nbsp;</span>
-			<span class="badge">&nbsp;</span>
-			<span class="team">&nbsp;</span>
-		</h3>
-		<h1 class="term">STARTE SPIEL</h1>
-		<p class="timer">&nbsp;</p>
-	</div>
-
-	<div class="col-md-6 scores">
-		<table class="table table-striped">
-			<thead>
-				<tr>
-					<th>#</th>
-					<th>Team A</th>
-					<th>Team B</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr>
-					<td>1</td>
-					<td class="score round-1 team-a">0</td>
-					<td class="score round-1 team-b">0</td>
-				</tr>
-				<tr>
-					<td>2</td>
-					<td class="score round-2 team-a">0</td>
-					<td class="score round-2 team-b">0</td>
-				</tr>
-				<tr>
-					<td>3</td>
-					<td class="score round-3 team-a">0</td>
-					<td class="score round-3 team-b">0</td>
-				</tr>
-				<tr>
-					<td>&nbsp;</td>
-					<td class="score total team-a">0</td>
-					<td class="score total team-b">0</td>
-				</tr>
-			</tbody>
-		</table>
-	</div>
-
-</div><!-- /.container -->
-<div class="container terms">
-	Die letzten Begriffe korrigieren
-</div>
-
-<nav class="navbar navbar-inverse navbar-fixed-bottom">
-	<div class="container">
-		<div class="navbar-header game">
-			<button type="button" class="btn btn-lg btn-primary" action="startTimer">Start</button>
-			<button type="button" class="btn btn-lg btn-success" action="nextCard" disabled>Richtig</button>
-<!--			<button type="button" class="btn btn-lg btn-warning" action="correct" disabled>Korrigieren</button>-->
 		</div>
-		<div class="navbar-header terms">
-			<button type="button" class="btn btn-lg btn-primary" action="backToGame">Zurück</button>
+
+		<div data-role="footer" data-position="fixed" data-theme="b">
+			&nbsp;
 		</div>
 	</div>
-</nav>
 
+	<div data-role="page" id="edit">
+		<div data-role="header" data-position="fixed" data-theme="b">
+			<h1>Sammlung</h1>
+			<a href="#options" data-transition="flip" class="ui-btn ui-btn-inline ui-corner-all ui-btn-icon-notext ui-icon-arrow-l"></a>
+			<!-- <a href="#game"  data-transition="flip" class="ui-btn ui-btn-inline ui-corner-all ui-btn-icon-notext ui-icon-home"></a> -->
+			<!-- <a href="#options" data-transition="flip" class="ui-btn-right ui-btn ui-btn-inline ui-mini ui-corner-all ui-btn-icon-right ui-icon-bars">Optionen</a> -->
+		</div>
+
+		<div data-role="content">
+			<ul data-role="listview" data-filter="true" data-filter-placeholder="Begriff suchen">
+				<li><a href="#editterm" data-transition="flip">Acura</a></li>
+				<li><a href="#editterm" data-transition="flip">Audi</a></li>
+				<li><a href="#editterm" data-transition="flip">BMW</a></li>
+				<li><a href="#editterm" data-transition="flip">Pink Cadillac</a></li>
+				<li><a href="#editterm" data-transition="flip">Ferrari</a></li>
+			</ul>
+		</div>
+
+		<div data-role="footer" data-position="fixed" data-theme="b" style="text-align: center;">
+			<a href="#editterm" data-transition="flip" class="ui-btn ui-corner-all ui-btn-icon-right ui-icon-plus" style="background-color: #009933; font-size: 1em;">Neu</a>
+			<a href="#deletecollection" data-rel="popup" data-transition="flip" class="ui-btn ui-corner-all ui-btn-icon-right ui-icon-delete" style="background-color: #990000; font-size: 1em;">Löschen</a>
+		</div>
+
+		<div data-role="popup" id="deletecollection" data-dismissible="false" style="max-width:90%;">
+			<div data-role="header">
+				<h1>Löschen</h1>
+			</div>
+			<div data-role="main" class="ui-content">
+				<h3 class="ui-title">Sicher, dass Du die Sammlung löschen wilst?</h3>
+				<p>Diese Aktion kann nicht rückgängig gemacht werden.</p>
+				<a href="#" class="ui-btn ui-corner-all ui-shadow ui-btn-inline" data-rel="back" data-transition="flip">Abbrechen</a>
+				<a href="#" class="ui-btn ui-corner-all ui-shadow ui-btn-inline" data-rel="back" data-transition="flip">Löschen</a>
+			</div>
+		</div>
+	</div>
+
+	<div data-role="page" id="editterm">
+		<div data-role="header" data-position="fixed" data-theme="b">
+			<h1>Bearbeiten</h1>
+			<a href="#edit" data-transition="flip" class="ui-btn ui-btn-inline ui-corner-all ui-btn-icon-notext ui-icon-arrow-l"></a>
+		</div>
+		<div data-role="content">
+			<form onsubmit="return false;">
+				<label for="form-editterm">Begriff:</label>
+				<input type="text" name="form-editterm" id="form-editterm" value="Pink Cadillac"/>
+				<input type="button" value="Speichern" data-icon="check">
+			</form>
+		</div>
+	</div>
+
+	<div data-role="page" id="newcollection">
+		<div data-role="header" data-position="fixed" data-theme="b">
+			<h1>Neue Sammlung</h1>
+			<a href="#options" data-transition="flip" class="ui-btn ui-btn-inline ui-corner-all ui-btn-icon-notext ui-icon-arrow-l"></a>
+		</div>
+		<div data-role="content">
+			<form onsubmit="return false;">
+				<label for="form-createterm">Name:</label>
+				<input type="text" name="form-editterm" id="form-editterm" value="Pink Cadillac"/>
+				<input type="button" value="Speichern" data-icon="check">
+			</form>
+		</div>
+	</div>
 </body>
 </html>
